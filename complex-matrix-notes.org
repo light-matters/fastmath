@@ -1,0 +1,142 @@
+#+title: Complex Notes
+
+* Proposal
+Something is incomplete in Clojure math support... Complex numbers and associated matrices.
+** Who am I?
+Thomas Clark, a physicist and Clojure hobbyist who is always looking for ways of integrating Clojure into mainstream academia and analysis.
+
+I've most recently worked on and am currently a maintainer of the Wolframite library and I've given a couple of talks regarding this and the scientific state of Clojure.
+
+https://youtu.be/SE5Ge4QP4oY?feature=shared
+https://youtu.be/_D5d6Ls6pBw?feature=shared
+https://youtu.be/rQ1hpYZSjuY?feature=shared
+
+** What project
+fastmath (https://github.com/generateme/fastmath)
+
+** Who is applying?
+I am a (minor) collaborator of 'generateme', who is the project owner and main maintainer of fastmath. I have spoken with him and he is interested and willing to help in the extension that I'm proposing but does not want to be part of the application.
+
+** what are you wanting to achieve with this funding?
+Inasmuch as Lewis Carrol may have creatively objected, complex numbers are now an essential part of modern life, from quantum computing upwards and whether we are aware of it or not (see the next question!).
+
+Clojure's support for these numbers however, remains sporadic while it's biggest competitor, the well-known comedy snake - and scripting language - (https://www.geeksforgeeks.org/python/history-of-python/), treats complex numbers as first-class citizens.
+
+With this funding I would like to address the issue somewhat, particularly with regard to the implementation of complex matrices, but concerning a consistent complex API more generally.
+
+Surveying the current field, the 'emmy' library seems to be the most developed option in this area, but it is focussed on symbolic manipulation. When dealing with large memory simulations, it is unlikely to be competitive. `core.matrix.complex` seems to be the numerical choice but its last commit was 5 years ago, it is a thin wrapper over apache commons and not all matrix protocols seem to have been extended to complex numbers. More confusingly, when dealing with numerical matrices more generally, the go-to choices are fastmath   and neanderthal - neither of which have implemented complex matrices.
+
+As the ecosystem is clearly fragmented, this project would seek to extend fastmath, which is the current high-level go-to for numerical matrices to deal with complex numbers in an API-consistent way.
+
+I would proceed as follows:
+- extended *survey* of the status and limitations of the present options (including performance tests for the current implementations)
+- *decision* on the best *architecture* for a competitive solution
+- *Implementation/API creation* for
+  - complex vectors, arrays and fundamental matrix ops (including scaling/trace determinant etc.)
+  - LU decomposition and solver
+- *Integration* with
+  - existing fastmath functions, e.g. including fourier analysis and polynomials
+  - Wolframite
+  - Clay / kind
+- *Performance* comparisons with (at least)
+  - Python
+  - Emmy
+  - Wolframite
+- *Publication* of a full blog report, outlining an introduction to working with complex numbers in Clojure, complete with the results and analysis of the above
+
+  The 'stretch' goals would be
+  - to ensure full integration of the complex matrix system, such that all current matrix operations in fastmath could be performed seamlessly with complex matrices too.
+  - to integrate the implementation with the emmy system, such that operations could be carried out symbolically or numerically as desired
+  - to implement the basic operations in neanderthal, for maximum performance
+
+
+
+** Why is this project important to the community?
+Complex numbers now underpin quantitative life, so whether you are a mathematician, natural scientist or engineer, they come up daily. Even for other types of programmer, complex numbers are the basis of signal (e.g. audio, radar and communications) and image (compression, detection, texture analysis and optics) processing. They now even feature heavily in MRI data and machine learning: extending the user-base to data scientists too.
+
+Such is the case, I hope that this project will both help the community directly and also help contribute to the expansion of the community itself. There is a large section of numerical scientists who are not programmers but who rely on tools like Mathematica and Matlab. Many also use Python, where complex numbers are embedded. These projects are all lacking however, Mathematica and Matlab are not convenient languages for general programming, and so bigger projects, and Python is still, at heart, a scripting language lacking parallelism and REPL interaction. Until Clojure catches up with these however, we will not be able to win over many new users from these fields. A consistent complex API would be a small step, but a necessary one towards this goal.
+* Questions
+** state of core.matrix?
+dead!
+** What API should we follow?
+** implementation on Neanderthal?
+** How should we insert it in the namespace?
+eventually generalize the fastmath matrix space
+** Where can we store the type?
+
+** libraries available
+https://github.com/lsolbach/qclojure/blob/math-refactoring/src/org/soulspace/qclojure/domain/math/clojure_math.clj
+
+https://github.com/lessthanoptimal/ejml
+
+https://github.com/jblas-project/jblas
+- considered but weird dependencies
+
+apache commons field matrix?
+and complex (field?) vectors
+
+compare and make a decision
+* Transform support
+- fft4j
+* Checklist
+** initial performance tests 
+*** TODO fastmath (non complex)
+vs Python
+*** TODO apache commons vs ejml
+
+** API creation
+*** TODO fundamental matrix ops
+*** LU decomposition and solver
+*** easy interoperability?
+** Integration
+*** clay
+*** real and complex
+interoperability
+*** Ince-Gaussian
+*** Fourire-analysis
+*** Wolframite
+** Performance tests
+*** Python
+*** Emmy
+*** Wolframite
+** Publication
+* Comments on current API
+** api version
+version the api?
+** subtype/class should be preceeded by '--'?
+e.g.
+** separate creation functions?
+e.g. diag and diagonal 
+one is information retrieval; other is creation
+names very similar 
+
+Maybe have (m/diag A) and
+
+(m.create/diag [...])
+(m.new/diag [...])
+(mc/diag [...])
+** functions shouldn't have trailing 'm' for matrix everywhere
+(m/mul ...) is cleaner than (m/mulm)
+namespaces are good!
+** Use mathematical notation?
+This is cleaner and more universal, e.g. (m/*v) instead of (m/mulv)
+
+Could use this as a general branching point? Multimethod or protocol etc. As opposed to the other methods. 
+** eye ...
+This feels like a Python holdover that is not very clear.  Identity or 'I' would probably be better. I do have a sense of humour, honest!
+** vtmul
+Argument order is strange?
+** Can't use 'vectors' as 'vector'!
+Clojure vectors ([...]) can't be used with mulv.
+** Should vector and matrix be inside the same namespace?
+e.g. maybe a 'linear algebra' namespace
+** m/zero
+argument order is strange. Need to specify if it is real before rectangular.
+** vec->...
+could cut the vec?
+i.e. (v/->RealVector)
+* Questions
+** Is it convenient (in EJML) to coerce ZMatrices to DMatrices if all of the elements are real?
+
+* Notes
+Fastmath uses a mixture of apache and hard-coded clojure?

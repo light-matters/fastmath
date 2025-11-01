@@ -1,4 +1,4 @@
-(ns fastmath.matrix
+(ns fastmath.matrix.dense.real.apache
   "Provides tools for working with various matrix types, including fixed-size (2x2, 3x3, 4x4), Java `double[][]` arrays, and Apache Commons Math `RealMatrix`.
 
   It offers efficient mathematical operations for linear algebra, geometric transformations, and data manipulation, unifying different representations under a common protocol approach where appropriate."
@@ -84,7 +84,7 @@
            (and (== a00 (.a00 m)) (== a01 (.a01 m))
                 (== a10 (.a10 m)) (== a11 (.a11 m))))))
   (hashCode [_] (gen-hashc 2))
-  clojure.lang.IHashEq 
+  clojure.lang.IHashEq
   (hasheq [_] (gen-hashc 2))
   Seqable
   (seq [_] (list a00 a01 a10 a11))
@@ -211,7 +211,7 @@
                 (== a10 (.a10 m)) (== a11 (.a11 m)) (== a12 (.a12 m))
                 (== a20 (.a20 m)) (== a21 (.a21 m)) (== a22 (.a22 m))))))
   (hashCode [_] (gen-hashc 3))
-  clojure.lang.IHashEq 
+  clojure.lang.IHashEq
   (hasheq [_] (gen-hashc 3))
   Seqable
   (seq [_] (list a00 a01 a02 a10 a11 a12 a20 a21 a22))
@@ -369,7 +369,7 @@
                 (== a20 (.a20 m)) (== a21 (.a21 m)) (== a22 (.a22 m)) (== a23 (.a23 m))
                 (== a30 (.a30 m)) (== a31 (.a31 m)) (== a32 (.a32 m)) (== a33 (.a33 m))))))
   (hashCode [_] (gen-hashc 4))
-  clojure.lang.IHashEq 
+  clojure.lang.IHashEq
   (hasheq [_] (gen-hashc 4))
   Seqable
   (seq [_] (list a00 a01 a02 a03 a10 a11 a12 a13 a20 a21 a22 a23 a30 a31 a32 a33))
@@ -445,7 +445,7 @@
                            (m/delta-eq a31 a13 tol) (m/delta-eq a32 a23 tol)))
   (transpose [_] (Mat4x4. a00 a10 a20 a30 a01 a11 a21 a31 a02 a12 a22 a32 a03 a13 a23 a33))
   (inverse [_] (let [d (+ (* a00 (gen-det3 a11 a12 a13 a21 a22 a23 a31 a32 a33))
-                          (* (- a10) (gen-det3 a01 a02 a03 a21 a22 a23 a31 a32 a33 ))
+                          (* (- a10) (gen-det3 a01 a02 a03 a21 a22 a23 a31 a32 a33))
                           (* a20 (gen-det3 a01 a02 a03 a11 a12 a13 a31 a32 a33))
                           (* (- a30) (gen-det3 a01 a02 a03 a11 a12 a13 a21 a22 a23)))]
                  (when-not (zero? d)
@@ -472,7 +472,7 @@
   (diag [_] (Vec4. a00 a11 a22 a33))
   (trace [_] (+ a00 a11 a22 a33))
   (det [_] (+ (* a00 (gen-det3 a11 a12 a13 a21 a22 a23 a31 a32 a33))
-              (* (- a10) (gen-det3 a01 a02 a03 a21 a22 a23 a31 a32 a33 ))
+              (* (- a10) (gen-det3 a01 a02 a03 a21 a22 a23 a31 a32 a33))
               (* a20 (gen-det3 a01 a02 a03 a11 a12 a13 a31 a32 a33))
               (* (- a30) (gen-det3 a01 a02 a03 a11 a12 a13 a21 a22 a23))))
   (singular? [m] (m/zero? (double (prot/det m))))
@@ -574,16 +574,16 @@
    :to-double-array (fn [arrs] (double-array (mapcat seq arrs)))
    :to-float-array (fn [arrs] (float-array (mapcat seq arrs)))
    :to-real-matrix (fn [arrs] (Array2DRowRealMatrix. ^"[[D" arrs))
-   :nrow alength 
+   :nrow alength
    :ncol (comp alength first)
    :row (fn [^"[[D" arrs ^long id] (aget arrs id))
    :column (fn [arrs ^long id] (Array/mat2column arrs id))
    :symmetric? (fn ([^"[[D" arrs] (let [nr (prot/nrow arrs)
-                                       nc (prot/ncol arrs)]
-                                   (every? identity (for [^long r (range nr)
-                                                          c (range (inc r) nc)]
-                                                      (== ^double (aget arrs r c)
-                                                          ^double (aget arrs c r))))))
+                                        nc (prot/ncol arrs)]
+                                    (every? identity (for [^long r (range nr)
+                                                           c (range (inc r) nc)]
+                                                       (== ^double (aget arrs r c)
+                                                           ^double (aget arrs c r))))))
                  ([^"[[D" arrs ^double tol] (let [nr (prot/nrow arrs)
                                                   nc (prot/ncol arrs)]
                                               (every? identity (for [^long r (range nr)
@@ -592,34 +592,34 @@
                                                                              (aget arrs c r) tol))))))
    :transpose (fn [arrs] (into-array (Array/mat2cols arrs)))
    :inverse (fn [^"[[D" arrs] (->  arrs
-                                  (Array2DRowRealMatrix.)
-                                  (MatrixUtils/inverse)
-                                  (.getData)))
+                                   (Array2DRowRealMatrix.)
+                                   (MatrixUtils/inverse)
+                                   (.getData)))
    :diag (fn [arrs] (Array/mat2diag arrs))
    :det (fn [^"[[D" arrs] (-> arrs
-                             (Array2DRowRealMatrix.)
-                             (LUDecomposition.)
-                             (.getDeterminant)))
+                              (Array2DRowRealMatrix.)
+                              (LUDecomposition.)
+                              (.getDeterminant)))
    :singular? (fn [^"[[D" arrs] (not (-> arrs
-                                        (Array2DRowRealMatrix.)
-                                        (LUDecomposition.)
-                                        (.getSolver)
-                                        (.isNonSingular))))
+                                         (Array2DRowRealMatrix.)
+                                         (LUDecomposition.)
+                                         (.getSolver)
+                                         (.isNonSingular))))
    :solve (fn [^"[[D" arrs ^doubles v] (-> arrs
-                                          (Array2DRowRealMatrix.)
-                                          (MatrixUtils/inverse)
-                                          (.operate v)))
+                                           (Array2DRowRealMatrix.)
+                                           (MatrixUtils/inverse)
+                                           (.operate v)))
    :add (fn [arrs1 arrs2] (Array/matadd arrs1 arrs2))
    :adds (fn [arrs1 ^double v] (Array/matadds arrs1 v))
    :sub (fn ([arrs1 arrs2] (Array/matsub arrs1 arrs2))
           ([arrs1] (Array/matsub arrs1)))
    :emulm (fn [arrs1 arrs2] (Array/matemulm arrs1 arrs2))
    :mulm (fn ([^"[[D" arrs1 t1? ^"[[D" arrs2 t2?]
-             (let [m1 (Array2DRowRealMatrix. arrs1)
-                   m2 (Array2DRowRealMatrix. arrs2)
-                   ^Array2DRowRealMatrix m1 (if t1? (.transpose m1) m1)
-                   ^Array2DRowRealMatrix m2 (if t2? (.transpose m2) m2)]
-               (.getDataRef (.multiply m1 m2))))
+              (let [m1 (Array2DRowRealMatrix. arrs1)
+                    m2 (Array2DRowRealMatrix. arrs2)
+                    ^Array2DRowRealMatrix m1 (if t1? (.transpose m1) m1)
+                    ^Array2DRowRealMatrix m2 (if t2? (.transpose m2) m2)]
+                (.getDataRef (.multiply m1 m2))))
            ([^"[[D" arrs1 ^"[[D" arrs2]
             (let [m1 (Array2DRowRealMatrix. arrs1)
                   m2 (Array2DRowRealMatrix. arrs2)]
@@ -635,10 +635,10 @@
    :muls (fn [arrs1 ^double v] (Array/matmuls arrs1 v))
    :trace (fn [arrs] (v/sum (Array/mat2diag arrs)))
    :cholesky (fn [^"[[D" arrs] (-> arrs
-                                  (Array2DRowRealMatrix.)
-                                  (CholeskyDecomposition.)
-                                  (.getL)
-                                  (.getData)))
+                                   (Array2DRowRealMatrix.)
+                                   (CholeskyDecomposition.)
+                                   (.getL)
+                                   (.getData)))
    :norm (fn [^"[[D" arrs t] (prot/norm (Array2DRowRealMatrix. arrs) t))})
 
 (extend RealMatrix
@@ -647,9 +647,9 @@
    :entry (fn ^double [^RealMatrix m ^long x ^long y] (.getEntry m x y))
    :fmap (fn [^RealMatrix m f] (Array2DRowRealMatrix. ^"[[D" (prot/fmap (.getData m) f)))
    :rows (fn [^RealMatrix m] (map (fn [idx] (.getRowVector m (unchecked-int idx)))
-                                 (range (.getRowDimension m))))
+                                  (range (.getRowDimension m))))
    :cols (fn [^RealMatrix m] (map (fn [idx] (.getColumnVector m (unchecked-int idx)))
-                                 (range (.getColumnDimension m))))
+                                  (range (.getColumnDimension m))))
    :to-double-array2d (fn [^RealMatrix m] (.getData m))
    :to-float-array2d (fn [^RealMatrix m] (prot/to-float-array2d (.getData m)))
    :to-double-array (fn [^RealMatrix m] (prot/to-double-array (.getData m)))
@@ -664,10 +664,10 @@
    :transpose (fn [^RealMatrix m] (.transpose m))
    :inverse (fn [^RealMatrix m] (MatrixUtils/inverse m))
    :diag (fn [^RealMatrix m] (let [size (.getRowDimension m)
-                                  v (ArrayRealVector. size)]
-                              (doseq [^int idx (range size)]
-                                (.setEntry v idx (.getEntry m idx idx)))
-                              v))
+                                   v (ArrayRealVector. size)]
+                               (doseq [^int idx (range size)]
+                                 (.setEntry v idx (.getEntry m idx idx)))
+                               v))
    :det (fn [^RealMatrix m] (.getDeterminant (LUDecomposition. m)))
    :singular? (fn [^RealMatrix m] (not (.isNonSingular (.getSolver (LUDecomposition. m)))))
    :solve (fn [^RealMatrix m ^RealVector v] (.solve (.getSolver (LUDecomposition. m)) v))
@@ -677,44 +677,43 @@
           ([^RealMatrix m] (.subtract (Array2DRowRealMatrix. (.getRowDimension m)
                                                              (.getColumnDimension m)) m)))
    :emulm (fn [^RealMatrix m1 ^RealMatrix m2] (let [m (.copy m1)]
-                                               (doseq [^int r (range (.getRowDimension m))
-                                                       ^int c (range (.getColumnDimension m))]
-                                                 (.setEntry m r c (* (.getEntry m1 r c)
-                                                                     (.getEntry m2 r c))))
-                                               m))
+                                                (doseq [^int r (range (.getRowDimension m))
+                                                        ^int c (range (.getColumnDimension m))]
+                                                  (.setEntry m r c (* (.getEntry m1 r c)
+                                                                      (.getEntry m2 r c))))
+                                                m))
    :mulm (fn ([^RealMatrix m1 t1? ^RealMatrix m2 t2?]
-             (let [m1 (if t1? (.transpose m1) m1)
-                   m2 (if t2? (.transpose m2) m2)]
-               (.multiply m1 m2)))
+              (let [m1 (if t1? (.transpose m1) m1)
+                    m2 (if t2? (.transpose m2) m2)]
+                (.multiply m1 m2)))
            ([^RealMatrix m1 ^RealMatrix m2] (.multiply m1 m2)))
    :mulv (fn [^RealMatrix m1 v] (if (instance? RealVector v)
-                                 (.operate m1 ^RealVector v)
-                                 (.operate m1 ^doubles v)))
+                                  (.operate m1 ^RealVector v)
+                                  (.operate m1 ^doubles v)))
    :vtmul (fn [^RealMatrix m1 v] (if (instance? RealVector v)
-                                  (.preMultiply m1 ^RealVector v)
-                                  (.preMultiply m1 ^doubles v)))
+                                   (.preMultiply m1 ^RealVector v)
+                                   (.preMultiply m1 ^doubles v)))
    :muls (fn [^RealMatrix m1 ^double v] (.scalarMultiply m1 v))
    :trace (fn [^RealMatrix m] (.getTrace m))
    :cholesky (fn [^RealMatrix m] (.getL (CholeskyDecomposition. m)))
    :norm (fn [^RealMatrix m t] (if (sequential? t)
-                                (let [[^double p ^double q] t]
-                                  (if (and (== p 2.0) (== q 2.0))
-                                    (.getFrobeniusNorm m)
-                                    (let [qp (/ q p)]
-                                      (-> (->> (prot/cols m)
-                                               (map (fn [c] (-> (v/abs c)
-                                                               (v/fmap (fn [v] (m/pow v p)))
-                                                               (v/sum)
-                                                               (m/pow qp)))))
-                                          (v/sum)
-                                          (m/pow (/ q))))))
-                                (condp = t
-                                  :inf (.getNorm (.transpose m))
-                                  :max (reduce m/max (for [^int r (range (.getRowDimension m))
-                                                           ^int c (range (.getColumnDimension m))]
-                                                       (m/abs (.getEntry m r c))))
-                                  (.getNorm m))))})
-
+                                 (let [[^double p ^double q] t]
+                                   (if (and (== p 2.0) (== q 2.0))
+                                     (.getFrobeniusNorm m)
+                                     (let [qp (/ q p)]
+                                       (-> (->> (prot/cols m)
+                                                (map (fn [c] (-> (v/abs c)
+                                                                 (v/fmap (fn [v] (m/pow v p)))
+                                                                 (v/sum)
+                                                                 (m/pow qp)))))
+                                           (v/sum)
+                                           (m/pow (/ q))))))
+                                 (condp = t
+                                   :inf (.getNorm (.transpose m))
+                                   :max (reduce m/max (for [^int r (range (.getRowDimension m))
+                                                            ^int c (range (.getColumnDimension m))]
+                                                        (m/abs (.getEntry m r c))))
+                                   (.getNorm m))))})
 
 (defn mat2x2
   "Creates 2x2 matrix.
@@ -786,7 +785,7 @@
   * 1 - fills matrix with given value
   * 4 - creates diagonal matrix
   * 16 - creates row ordered matrix"
-  (^Mat4x4 [^double v] (Mat4x4. v v v v v v v v v v v v v v v v ))
+  (^Mat4x4 [^double v] (Mat4x4. v v v v v v v v v v v v v v v v))
   (^Mat4x4 [^double d1 ^double d2 ^double d3 ^double d4] (Mat4x4. d1 0.0 0.0 0.0
                                                                   0.0 d2 0.0 0.0
                                                                   0.0 0.0 d3 0.0

@@ -8,7 +8,7 @@
 
                  [de.sciss/jwave "1.0.3"]
                  [com.github.wendykierp/JTransforms "3.1"]
-                 
+
                  [ca.umontreal.iro.simul/ssj "3.3.2"
                   :exclusions [org.jfree/jfreechart
                                org.jfree/jcommon]]
@@ -20,7 +20,7 @@
   :java-source-paths ["src" "LBFGSBJava/src"]
   :javac-options ["--release" "8"  "-Xlint:unchecked"]
   :scm {:name "git"
-        :url "https://github.com/generateme/fastmath/"}  
+        :url "https://github.com/generateme/fastmath/"}
   :profiles {:1.10 {:dependencies [[org.clojure/clojure "1.10.3"]]}
              :1.11 {:dependencies [[org.clojure/clojure "1.11.3"]]}
              :1.12 {:dependencies [[org.clojure/clojure "1.12.0"]]}
@@ -36,7 +36,9 @@
                                   [scicloj/clojisr "1.0.0"]
                                   [scicloj/tablecloth "7.059"]
                                   [virgil "0.3.2"]
-                                  [org.ow2.asm/asm "9.7.1"]]
+                                  [org.ow2.asm/asm "9.7.1"]
+                                  [org.ejml/ejml-all "0.43"]
+                                  [criterium "0.4.6"]]
                    :source-paths ["notebooks" "utils"]}
              :dev-codox {:codox {:source-uri "https://github.com/generateme/fastmath/blob/master/{filepath}#L{line}"
                                  :namespaces [#"^fastmath\.(?!fields\.[a-z])"]}}}
