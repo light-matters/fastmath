@@ -137,6 +137,7 @@ could cut the vec?
 i.e. (v/->RealVector)
 * Questions
 ** Is it convenient (in EJML) to coerce ZMatrices to DMatrices if all of the elements are real?
+** Should 'm' be replaced with 'M' as the standard placeholder?
 
 * Notes
 Fastmath uses a mixture of apache and hard-coded clojure?

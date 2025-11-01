@@ -1,6 +1,11 @@
 (ns fastmath.matrix.dense.real.ejml
   "Implementing real matrices using EJML as a backend [https://github.com/lessthanoptimal/ejml].
 
+   Legend:
+   m - matrix type
+   i - row index
+   j - column index
+
    TODO:
    - Should we implement a real vector type as well (consistency)?
   "
@@ -23,6 +28,25 @@
 (set! *unchecked-math* :warn-on-boxed)
 
 (def ^:private ^double tolerance--default 1.0e-10)
+
+;; ==================================================
+;; Functions 
+;; ==================================================
+(defn ^DMatrixRMaj extract
+;; TODO: Add to type?
+  "Extracts a submatrix m[i0:i1, j0:j1) into a new DMatrixRMaj.
+   Indices are zero-based and end-exclusive."
+  [^DMatrixRMaj m
+   ^longs [i0 i1]
+   ^longs [j0 j1]]
+  (let [^DMatrixRMaj out (DMatrixRMaj. (- i1 i0) (- j1 j0))]
+    (CommonOps_DDRM/extract m i0 i1 j0 j1 out 0 0)
+    out))
+
+(defn ^DMatrixRMaj extract-multiple
+  ;; TODO: efficiency implementaton
+  "Reuses the destination memory for multiple access calls."
+  [])
 
 (deftype RealDense [^DMatrixRMaj M]
   proto/MatrixReal
@@ -58,17 +82,13 @@
 
   ;; -------- Retrieval --------
   (columns [_]
-    (mapv (fn [j]
-            (let [out (DMatrixRMaj. (.numRows M) 1)]
-              (CommonOps_DDRM/extract M 0 (.numRows M) j (inc j) out)
-              (RealDense. out)))
+    (mapv (fn [ic]
+            (extract M [0 (.numRows M)] [ic (inc ic)]))
           (range (.numCols M))))
 
   (rows [_]
-    (mapv (fn [i]
-            (let [out (DMatrixRMaj. 1 (.numCols M))]
-              (CommonOps_DDRM/extract M i (inc i) 0 (.numCols M) out)
-              (RealDense. out)))
+    (mapv (fn [^long ir]
+            (extract M [ir (inc ir)] [0 (.numCols M)]))
           (range (.numRows M))))
 
   (diagonal [_]
@@ -81,14 +101,10 @@
     (.get M (long i) (long j)))
 
   (column [_ j]
-    (let [out (DMatrixRMaj. (.numRows M) 1)]
-      (CommonOps_DDRM/extract M 0 (.numRows M) j (inc j) out)
-      (RealDense. out)))
+    (extract M [0 (.numRows M)] [j (inc j)]))
 
   (row [_ i]
-    (let [out (DMatrixRMaj. 1 (.numCols M))]
-      (CommonOps_DDRM/extract M i (inc i) 0 (.numCols M) out)
-      (RealDense. out)))
+    (extract M [i (inc i)] [0 (.numCols M)]))
 
   (num-rows [_] (.numRows M))
   (num-cols [_] (.numCols M))
@@ -213,7 +229,7 @@
       (CommonOps_DDRM/transpose M T)
       (RealDense. T)))
 
-  ;; ;; -------- Predicates --------
+;; ;; -------- Predicates --------
   (normal? [_]
     ;; AᵀA ≈ AAᵀ
     (let [AtA (DMatrixRMaj. (.numCols M) (.numCols M))
@@ -234,6 +250,7 @@
   (unitary? [_]
     ;; For real matrices, “unitary” == orthogonal.
     (MatrixFeatures_DDRM/isOrthogonal M tolerance--default)))
+
 ;; -------------------------------------------------------------------
 ;; Constructors 
 ;; -------------------------------------------------------------------

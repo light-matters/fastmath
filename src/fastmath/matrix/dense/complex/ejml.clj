@@ -61,7 +61,7 @@
 ;; ------------------------------------------------------------
 
 (extend-type ComplexDense
-  proto/Matrix
+  proto/MatrixReal
 
   ;; -------- Transformations --------
 
