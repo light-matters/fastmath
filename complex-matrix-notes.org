@@ -76,6 +76,8 @@ apache commons field matrix?
 and complex (field?) vectors
 
 compare and make a decision
+** Do we have to change how complex numbers are implemented in fastmath?
+Needs to play nicely with Complex_F64
 * Transform support
 - fft4j
 * Checklist
@@ -138,6 +140,7 @@ i.e. (v/->RealVector)
 * Questions
 ** Is it convenient (in EJML) to coerce ZMatrices to DMatrices if all of the elements are real?
 ** Should 'm' be replaced with 'M' as the standard placeholder?
+** Does fastmath have a 'nice' complex number string output?
 
 * Notes
 Fastmath uses a mixture of apache and hard-coded clojure?
