@@ -12,10 +12,13 @@
    [fastmath.vector :as v]
    [fastmath.core :as fm]
    [fastmath.protocols.matrix2 :as mat])
+
   (:import
    (java.lang Math)
-   (org.ejml.data ZMatrixRMaj
-                  Complex_F64)
+   (org.ejml.data
+    ;; DMatrixRMaj
+    ZMatrixRMaj
+    Complex_F64)
    (org.ejml.interfaces.decomposition LUDecomposition_F64)
    (org.ejml.dense.row
     CommonOps_ZDRM
@@ -29,7 +32,8 @@
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
 
-(def ^:private ^double tolerance--default 1.0e-10)
+(def ^:private tolerance--default 1.0e-10)
+;; (def ^:private ^double tolerance--default 1.0e-10)
 
 ;; ==================================================
 ;; Functions 
@@ -292,14 +296,13 @@
   (hermitian? [_]
     (MatrixFeatures_ZDRM/isHermitian M tolerance--default))
 
-  (real?
-    [_]
+  (real? [_]
     (let [^"[D" d (.-data M)
           n (alength d)]
       (loop [i 1]
         (cond
           (>= i n) true
-          (> (Math/abs (aget d i)) tolerance--default) false
+          (> (Math/abs (aget d i)) (double tolerance--default)) false
           :else (recur (+ i 2))))))
 
   Object
@@ -342,22 +345,14 @@
     (ComplexDense. out)))
 
 (comment (println "test")
-         (->
-          (ZMatrixRMaj. 2 2 false (double-array [1 0 0 0
-                                                 1 0 0 0]))
-          (.-data)
-          (aget 3)
+         (def A--test (complexdense 2 2 (double-array [1 1 0 0
+                                                       1 0 0 0])))
+         (def B--test (complexdense 2 2 (double-array [1 0 1 0
+                                                       1 0 0 1])))
+         (-> (mat/add A--test B--test)
+             mat/real
 
-          println)
-
-         (let [^"[D" d (.-data (ZMatrixRMaj. 2 2 false (double-array [1 0 0 0
-                                                                      1 0 0 0])))
-               n (alength d)]
-           (loop [i 1]
-             (cond
-               (>= i n) true
-               (> (Math/abs (aget d i)) 1.0e-10) false
-               :else (recur (+ i 2)))))
+             println)
 
          (-> (ComplexDense. (ZMatrixRMaj. 3 3))
              println))
