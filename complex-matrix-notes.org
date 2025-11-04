@@ -141,6 +141,7 @@ i.e. (v/->RealVector)
 ** Is it convenient (in EJML) to coerce ZMatrices to DMatrices if all of the elements are real?
 ** Should 'm' be replaced with 'M' as the standard placeholder?
 ** Does fastmath have a 'nice' complex number string output?
+** Should complex matrices come under complex or matrix?
 
 * Notes
 Fastmath uses a mixture of apache and hard-coded clojure?

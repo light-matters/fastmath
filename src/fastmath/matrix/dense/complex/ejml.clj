@@ -9,9 +9,11 @@
   "
 
   (:require
+   [clojure.string :as str]
    [fastmath.vector :as v]
    [fastmath.core :as fm]
-   [fastmath.protocols.matrix2 :as mat])
+   [fastmath.protocols.matrix2 :as mat]
+   [fastmath.matrix.dense.real.ejml :as realdense])
 
   (:import
    (java.lang Math)
@@ -38,6 +40,7 @@
 ;; ==================================================
 ;; Functions 
 ;; ==================================================
+
 (defn- ^ZMatrixRMaj extract
 ;; TODO: Add to type?
   "Extracts a submatrix m[i0:i1, j0:j1) into a new ZMatrixRMaj.
@@ -68,9 +71,61 @@
   (let [A (.copy m)]
     (.set A i j (.-real cnum) (.-imaginary cnum)) A))
 
+(defn ^String format--real [^double x ^long p ^double eps]
+  (format (str "%." p "f") (if (< (Math/abs x) eps) 0.0 x)))
+(defn ^String format--complex [^double re ^double im ^long p ^double eps]
+  (let [rz (if (< (Math/abs re) eps) 0.0 re)
+        iz (if (< (Math/abs im) eps) 0.0 im)]
+    (str (format (str "%." p "f") rz)
+         (format (str "%+" p "f") iz)
+         "i")))
+
+(defn- realZM?
+  ([^ZMatrixRMaj M]
+   (realZM? M tolerance--default))
+  ([^ZMatrixRMaj M tolerance]
+   (let [^"[D" d (.-data M)
+         n (alength d)]
+     (loop [i 1]
+       (cond
+         (>= i n) true
+         (> (Math/abs (aget d i)) (double tolerance)) false
+         :else (recur (+ i 2)))))))
+
+(defn ->str
+  "Pretty string for ZMatrixRMaj with aligned columns.
+   Options: :precision (3), :eps (1e-12), :max-rows (12), :max-cols (12)"
+
+  ([^ZMatrixRMaj A] (->str A {}))
+  ([^ZMatrixRMaj A {:keys [precision eps max-rows max-cols]
+                    :or   {precision 3 eps tolerance--default max-rows 12 max-cols 12}}]
+   (let [num-rows (.numRows A) num-cols (.numCols A)
+         rlim (min num-rows ^long max-rows) clim (min num-cols ^long max-cols)
+         real? (realZM? A eps)
+         cell (fn [i j]
+                (if real?
+                  (format--real (.getReal A i j) precision eps)
+                  (format--complex (.getReal A i j) (.getImag A i j) precision eps)))
+         mat (vec (for [i (range rlim)]
+                    (vec (concat (for [j (range clim)] (cell i j))
+                                 (when (< ^long clim num-cols) ["…"])))))
+         w   (if (seq mat) (apply max (mapcat #(map count %) mat)) 0)
+         pad (fn [s] (format (str "%-" w "s") s))
+         row->s (fn [row] (str "[" (str/join " " (map pad row)) "]"))
+         head (format ":shape [%d %d] :type %s" num-rows num-cols (if real? "float64" "complex128"))]
+     (str head "\n"
+          "["
+          (str/join "\n" (map-indexed #(str (when (> ^long %1 0) " ") (row->s %2)) mat))
+          (when (< ^long rlim num-rows) "\n …")
+          "]"))))
+
+(defn print!
+  ([^ZMatrixRMaj A] (print! A {}))
+  ([^ZMatrixRMaj A opts]
+   (println (->str A opts))))
+
 (deftype ComplexDense [^ZMatrixRMaj M]
   mat/MatrixReal
-
   ;; -------- Transformations --------
   (->seq [_]
     (seq (.data M)))
@@ -103,12 +158,12 @@
   ;; -------- Retrieval --------
   (columns [_]
     (mapv (fn [^long ic]
-            (extract M [0 (.numRows M)] [ic (+ 1 ic)]))
+            (ComplexDense. (extract M [0 (.numRows M)] [ic (+ 1 ic)])))
           (range (.numCols M))))
 
   (rows [_]
     (mapv (fn [^long ir]
-            (extract M [ir (+ ir 1)] [0 (.numCols M)]))
+            (ComplexDense. (extract M [ir (+ ir 1)] [0 (.numCols M)])))
           (range (.numRows M))))
 
   (diagonal [_]
@@ -121,10 +176,10 @@
     (getc M (long i) (long j)))
 
   (column [_ j]
-    (extract M [0 (.numRows M)] [j (+ 1 (long j))]))
+    (ComplexDense. (extract M [0 (.numRows M)] [j (+ 1 (long j))])))
 
   (row [_ i]
-    (extract M [i (+ 1 (long i))] [0 (.numCols M)]))
+    (ComplexDense. (extract M [i (+ 1 (long i))] [0 (.numCols M)])))
 
   (num-rows [_] (.numRows M))
   (num-cols [_] (.numCols M))
@@ -190,7 +245,7 @@
 
   (mul--e [this other]
     (let [^ZMatrixRMaj B (.M ^ComplexDense other)]
-      (CommonOps_ZDRM/elementMultiply M B nil nil)))
+      (ComplexDense. (CommonOps_ZDRM/elementMultiply M B nil nil))))
 
   (mul--v [this v]
     ;; v is expected to be (n×1) ComplexDense
@@ -261,23 +316,26 @@
   (singular?
     ;; "Approximate, but robust numerical method."
     [_]
-    (let [^LUDecomposition_F64 lu (DecompositionFactory_ZDRM/lu (.numRows M) (.numCols M))]
+    (let [^LUDecomposition_F64 lu (DecompositionFactory_ZDRM/lu
+                                   (.numRows M) (.numCols M))]
       (or (not (.decompose lu M))
           (.isSingular lu))))
 
   (square? [_]
     (= (.numRows M) (.numCols M)))
 
-  (symmetric? [_] (if (= (.numRows M) (.numCols M))
-                    (MatrixFeatures_ZDRM/isEquals M
-                                                  (CommonOps_ZDRM/transpose M nil)
-                                                  tolerance--default)
-                    false))
-  (symmetric? [_ tol] (if (= (.numRows M) (.numCols M))
-                        (MatrixFeatures_ZDRM/isEquals M
-                                                      (CommonOps_ZDRM/transpose M nil)
-                                                      tol)
-                        false))
+  (symmetric? [_]
+    (if (= (.numRows M) (.numCols M))
+      (MatrixFeatures_ZDRM/isEquals M
+                                    (CommonOps_ZDRM/transpose M nil)
+                                    tolerance--default)
+      false))
+  (symmetric? [_ tol]
+    (if (= (.numRows M) (.numCols M))
+      (MatrixFeatures_ZDRM/isEquals M
+                                    (CommonOps_ZDRM/transpose M nil)
+                                    tol)
+      false))
 
   (unitary? [_]
     ;; For real matrices, “unitary” == orthogonal.
@@ -288,26 +346,20 @@
   (adjoint [_]
     (let [^ZMatrixRMaj out (ZMatrixRMaj. (.numCols M) (.numRows M))]
       (CommonOps_ZDRM/transposeConjugate M out)
-      out))
-  (conjugate [_] (CommonOps_ZDRM/conjugate M nil))
-  (imag [_] (CommonOps_ZDRM/imaginary M nil))
-  (real [_] (CommonOps_ZDRM/real M nil))
+      (ComplexDense. out)))
+  (conjugate [_] (ComplexDense. (CommonOps_ZDRM/conjugate M nil)))
+  (imag [_] (realdense/->RealDense (CommonOps_ZDRM/imaginary M nil)))
+  (real [_] (realdense/->RealDense (CommonOps_ZDRM/real M nil)))
 
   (hermitian? [_]
     (MatrixFeatures_ZDRM/isHermitian M tolerance--default))
 
   (real? [_]
-    (let [^"[D" d (.-data M)
-          n (alength d)]
-      (loop [i 1]
-        (cond
-          (>= i n) true
-          (> (Math/abs (aget d i)) (double tolerance--default)) false
-          :else (recur (+ i 2))))))
+    (realZM? M))
 
   Object
   (toString [_]
-    (.toString M)))
+    (print! M)))
 
 ;; -------------------------------------------------------------------
 ;; Constructors 
@@ -345,13 +397,9 @@
     (ComplexDense. out)))
 
 (comment (println "test")
-         (def A--test (complexdense 2 2 (double-array [1 1 0 0
-                                                       1 0 0 0])))
-         (def B--test (complexdense 2 2 (double-array [1 0 1 0
-                                                       1 0 0 1])))
+         (def A--test (complexdense 2 2 (double-array [1 1 0 0 1 0 0 0])))
+         (def B--test (complexdense 2 2 (double-array [1 0 1 0 1 0 0 1])))
          (-> (mat/add A--test B--test)
-             mat/real
-
              println)
 
          (-> (ComplexDense. (ZMatrixRMaj. 3 3))
