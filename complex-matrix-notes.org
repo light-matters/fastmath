@@ -142,6 +142,15 @@ i.e. (v/->RealVector)
 ** Should 'm' be replaced with 'M' as the standard placeholder?
 ** Does fastmath have a 'nice' complex number string output?
 ** Should complex matrices come under complex or matrix?
+* Parallel options available
 
 * Notes
 Fastmath uses a mixture of apache and hard-coded clojure?
+** Resources
+- Java Matrix Benchmark (https://github.com/lessthanoptimal/Java-Matrix-Benchmark)
+- netlib (for BLAS operations) (https://github.com/luhenry/netlib)
+- hipparchus is the replacement for apache commons math? (https://github.com/Hipparchus-Math/hipparchus)
+- 'fastest' java matrix library?! (https://github.com/optimatika/ojAlgo)
+
+  Confusing complex number support. Probably doesn't do matrix multiplication. 
+  - might be a good default for real operations?
