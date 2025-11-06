@@ -38,6 +38,7 @@
                                   [virgil "0.3.2"]
                                   [org.ow2.asm/asm "9.7.1"]
                                   [org.ejml/ejml-all "0.43"]
+                                  [org.ojalgo/ojalgo "56.1.0"]
                                   [criterium "0.4.6"]]
                    :source-paths ["notebooks" "utils"]}
              :dev-codox {:codox {:source-uri "https://github.com/generateme/fastmath/blob/master/{filepath}#L{line}"

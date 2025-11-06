@@ -84,10 +84,14 @@ Needs to play nicely with Complex_F64
 ** initial performance tests 
 *** TODO fastmath (non complex)
 vs Python
-*** TODO apache commons vs ejml
+*** DONE apache commons vs ejml
+*** TODO run java matrix benchmark test
+main considerations: ejml vs ojalgo
 
 ** API creation
 *** TODO fundamental matrix ops
+**** DONE ejml
+
 *** LU decomposition and solver
 *** easy interoperability?
 ** Integration
@@ -142,6 +146,8 @@ i.e. (v/->RealVector)
 ** Should 'm' be replaced with 'M' as the standard placeholder?
 ** Does fastmath have a 'nice' complex number string output?
 ** Should complex matrices come under complex or matrix?
+** Where should the implementation of complex number be, if matrices are going to interact with them consistently?
+** Similarly to complex number, where should constants like default tolerance be found? 
 * Parallel options available
 
 * Notes

@@ -12,6 +12,7 @@
 
   (:require [fastmath.vector :as v]
             [fastmath.core :as fm]
+            [fastmath.matrix.dense.constant :as constant]
             [fastmath.protocols.matrix2 :as mat])
   (:import
    (org.ejml.data DMatrixRMaj)
@@ -26,8 +27,6 @@
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
-
-(def ^:private ^double tolerance--default 1.0e-10)
 
 ;; ==================================================
 ;; Functions 
@@ -239,7 +238,7 @@
           AAt (DMatrixRMaj. (.numRows M) (.numRows M))]
       (CommonOps_DDRM/multTransA M M AtA)  ;; Aᵀ A
       (CommonOps_DDRM/multTransB M M AAt)  ;; A Aᵀ
-      (MatrixFeatures_DDRM/isIdentical AtA AAt tolerance--default)))
+      (MatrixFeatures_DDRM/isIdentical AtA AAt constant/tolerance--default)))
 
   (singular?
     ;; "Approximate, but robust numerical method."
@@ -255,7 +254,7 @@
 
   (unitary? [_]
     ;; For real matrices, “unitary” == orthogonal.
-    (MatrixFeatures_DDRM/isOrthogonal M tolerance--default))
+    (MatrixFeatures_DDRM/isOrthogonal M constant/tolerance--default))
 
   Object
   (toString [_]
