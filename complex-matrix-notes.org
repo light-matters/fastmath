@@ -147,8 +147,14 @@ i.e. (v/->RealVector)
 ** Does fastmath have a 'nice' complex number string output?
 ** Should complex matrices come under complex or matrix?
 ** Where should the implementation of complex number be, if matrices are going to interact with them consistently?
-** Similarly to complex number, where should constants like default tolerance be found? 
+** Similarly to complex number, where should constants like default tolerance be found?
+** Would an implementation based on dtype-next be efficient?
+[[x y] [x y]]
+ [x y] [x y]]
+*** I guess all of the operations and decomposition etc. would have to be manually implemented...
 * Parallel options available
+ejml methods
+ojalg?
 
 * Notes
 Fastmath uses a mixture of apache and hard-coded clojure?

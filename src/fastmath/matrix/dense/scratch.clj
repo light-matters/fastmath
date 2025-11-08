@@ -15,13 +15,6 @@ https://gist.github.com/apete/b3278dc2f8c2db6a00369c211ba321db
 (set! *unchecked-math* :warn-on-boxed)
 (println "===start===")
 
-(ns fastmath.matrix.complex
-  (:import [org.ojalgo.matrix MatrixC128 MatrixC128$Factory MatrixC128$DenseReceiver BasicMatrix]
-           [org.ojalgo.scalar ComplexNumber]
-           [org.ojalgo.matrix.store GenericStore]))
-
-(set! *warn-on-reflection* true)
-
 ;; ============================================================================
 ;; Complex number helpers
 ;; ============================================================================
@@ -37,53 +30,73 @@ https://gist.github.com/apete/b3278dc2f8c2db6a00369c211ba321db
   [(double (.getReal c)) (double (.getImaginary c))])
 
 ;; ============================================================================
-;; High-level API using MatrixC128 (recommended for most use cases)
+;; Efficient matrix creation from arrays
 ;; ============================================================================
 
-(defn ^MatrixC128$DenseReceiver create-matrix-builder
-  "Create a mutable builder for constructing a MatrixC128.
-  Use set! to populate it, then call build to get the immutable matrix."
-  [^long rows ^long cols]
-  (let [size (* rows cols)]
-    (.makeDense MatrixC128/FACTORY (int size))))
+(defn ^GenericStore create-store-from-array
+  "Create a GenericStore from a flat array of ComplexNumbers.
+  Data is in row-major order.
+  
+  Examples:
+  (create-store-from-array 2 2 [(complex 1 0) (complex 0 1)
+                                 (complex 2 3) (complex -1 -2)])
+  Creates:
+  [1+0i   0+1i  ]
+  [2+3i  -1-2i  ]"
+  [^long rows ^long cols data]
+  (let [arr (into-array ComplexNumber data)
+        factory (GenericStore/C128)]
+    (.rows factory (into-array (Class/forName "[Lorg.ojalgo.scalar.ComplexNumber;")
+                               [(into-array ComplexNumber (take cols arr))
+                                (into-array ComplexNumber (drop cols arr))]))))
 
-(defn ^MatrixC128 build-matrix
-  "Build an immutable MatrixC128 from a builder."
-  [^MatrixC128$DenseReceiver builder]
-  (.build builder))
-
-(defn set-element!
-  "Set an element in a matrix builder. Returns the builder for chaining."
-  [^MatrixC128$DenseReceiver builder ^long row ^long col value]
-  ;; Use the specific overload: set(long, long, Comparable)
-  (.set builder row col ^Comparable value)
-  builder)
+;; Actually, let's use a simpler approach - just create and populate
+(defn ^GenericStore matrix-from-vectors-fast
+  "Fast creation of GenericStore from nested vectors of [real imag] pairs."
+  [vectors]
+  (let [rows (long (count vectors))
+        cols (long (count (first vectors)))
+        store (create-store rows cols)]
+    ;; Populate using array copying would be faster, but this is still reasonably fast
+    (dotimes [i rows]
+      (dotimes [j cols]
+        (let [[real imag] (get-in vectors [i j])
+              c (complex real imag)]
+          (.set ^GenericStore store (long i) (long j) ^ComplexNumber c))))
+    store))
 
 (defn ^MatrixC128 matrix-from-vectors
   "Create a MatrixC128 from nested vectors of [real imag] pairs."
   [vectors]
-  (let [rows (long (count vectors))
-        cols (long (count (first vectors)))
-        ^MatrixC128$DenseReceiver builder (create-matrix-builder rows cols)]
-    (dotimes [i rows]
-      (dotimes [j cols]
-        (let [[real imag] (get-in vectors [i j])
-              ^Comparable c (complex real imag)]
-          (.set builder (long i) (long j) c))))
-    (build-matrix builder)))
-
-(defn ^MatrixC128 identity-matrix
-  "Create an identity matrix of size n x n."
-  [^long n]
-  (.makeIdentity MatrixC128/FACTORY (int n)))
+  (store->matrix (matrix-from-vectors-fast vectors)))
 
 ;; ============================================================================
-;; Low-level API using GenericStore (for maximum performance and mutability)
+;; Alternative: Use factory's rows/columns methods
+;; ============================================================================
+
+(defn ^MatrixC128 matrix-from-rows
+  "Create a MatrixC128 from rows of ComplexNumbers.
+  Each row is a sequence of ComplexNumber objects."
+  [rows-data]
+  (let [factory MatrixC128/FACTORY
+        rows-arrays (into-array (Class/forName "[Lorg.ojalgo.scalar.ComplexNumber;")
+                                (map #(into-array ComplexNumber %) rows-data))]
+    (.rows factory rows-arrays)))
+
+(defn ^MatrixC128 matrix-from-vectors-via-rows
+  "Create a MatrixC128 from nested vectors using the rows factory method."
+  [vectors]
+  (let [rows-data (for [row vectors]
+                    (for [[real imag] row]
+                      (complex real imag)))]
+    (matrix-from-rows rows-data)))
+
+;; ============================================================================
+;; Store operations
 ;; ============================================================================
 
 (defn ^GenericStore create-store
-  "Create a mutable GenericStore for complex matrices.
-  This is the low-level, high-performance option."
+  "Create an empty mutable GenericStore for complex matrices."
   [^long rows ^long cols]
   (.make (GenericStore/C128) rows cols))
 
@@ -93,20 +106,25 @@ https://gist.github.com/apete/b3278dc2f8c2db6a00369c211ba321db
   (.makeWrapper MatrixC128/FACTORY store))
 
 (defn ^GenericStore store-from-vectors
-  "Create a GenericStore from nested vectors of [real imag] pairs."
+  "Create a GenericStore from nested vectors (element-by-element)."
   [vectors]
   (let [rows (long (count vectors))
         cols (long (count (first vectors)))
-        ^GenericStore store (create-store rows cols)]
+        store (create-store rows cols)]
     (dotimes [i rows]
       (dotimes [j cols]
         (let [[real imag] (get-in vectors [i j])
-              ^ComplexNumber c (complex real imag)]
-          (.set store (long i) (long j) c))))
+              c (complex real imag)]
+          (.set ^GenericStore store (long i) (long j) ^ComplexNumber c))))
     store))
 
+(defn ^MatrixC128 identity-matrix
+  "Create an identity matrix of size n x n."
+  [^long n]
+  (.makeIdentity MatrixC128/FACTORY (int n)))
+
 ;; ============================================================================
-;; Common operations (work with both MatrixC128 and GenericStore)
+;; Common operations
 ;; ============================================================================
 
 (defn ^Comparable get-element
@@ -190,47 +208,27 @@ https://gist.github.com/apete/b3278dc2f8c2db6a00369c211ba321db
 ;; ============================================================================
 
 (comment
-  ;; HIGH-LEVEL APPROACH (Recommended - immutable, functional)
+  ;; METHOD 1: Using matrix-from-vectors (via GenericStore)
   (def A (matrix-from-vectors
           [[[1 0] [0 1]]
            [[2 3] [-1 -2]]]))
-
   (print-matrix A)
 
-  (def B (matrix-from-vectors
+  (type A)
+
+  ;; METHOD 2: Using matrix-from-vectors-via-rows (via MatrixC128 factory)
+  (def B (matrix-from-vectors-via-rows
           [[[1 0] [0 -1]]
            [[0 1] [1 0]]]))
+  (print-matrix B)
 
   ;; Matrix operations
-  (def C (matrix-multiply A B))
-  (print-matrix C)
 
   (def A-inv (matrix-invert A))
   (print-matrix A-inv)
 
+  (def C (matrix-multiply A A-inv))
+  (print-matrix C)
+
   (def I (identity-matrix 3))
-  (print-matrix I)
-
-  ;; LOW-LEVEL APPROACH (For performance)
-  (def store (create-store 2 2))
-  (.set store (long 0) (long 0) (complex 1.0 0.0))
-  (.set store (long 0) (long 1) (complex 0.0 1.0))
-  (print-matrix (store->matrix store)))
-
-(comment
-  (defn ->complex-array
-    [rows3d]
-    (into-array
-     (mapv (fn [plane]
-             (into-array
-              (mapv #(apply complex %) plane)))
-           rows3d)))
-
-  (def carray (->complex-array [[[1 2]  [1 0]]
-                                [[0 2]  [1 0]]]))
-
-  (.rows MatrixC128$Factory carray))
-
-
-
-
+  (print-matrix I))
