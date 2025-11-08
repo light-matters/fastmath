@@ -1,4 +1,4 @@
-(ns fastmath.matrix.dense.scratch2
+(ns fastmath.matrix.dense.ojalg-constructors--bench
   "A playground for working through ideas.
 
   Currently playing with the complex implementation of ojalgo matrices.
@@ -44,22 +44,6 @@ https://gist.github.com/apete/b3278dc2f8c2db6a00369c211ba321db
        (mapv #(apply cn %))
        (into-array ComplexNumber)))
 
-(defn ^GenericStore wrap-array-reflection
-  "Use reflection to call GenericStore.wrap, bypassing access restrictions."
-  [rows cols data]
-  (let [arr (into-array ComplexNumber data)
-        factory (GenericStore/C128)
-        ;; Find the wrap method with 3 parameters
-        wrap-method (->> (.getMethods GenericStore)
-                         (filter #(= "wrap" (.getName ^java.lang.reflect.Method %)))
-                         (filter #(= 3 (alength (.getParameterTypes ^java.lang.reflect.Method %))))
-                         first)]
-    (when wrap-method
-      (.setAccessible ^java.lang.reflect.Method wrap-method true)
-      ;; invoke takes: (method, object-instance, arg-array)
-      ;; For static methods, object-instance is nil
-      (.invoke ^java.lang.reflect.Method wrap-method nil (into-array Object [factory arr (int cols)])))))
-
 ;; Or the practical solution - populate manually
 (defn ^GenericStore create-from-nested-vectors
   "Efficiently create GenericStore from nested vectors."
@@ -91,6 +75,21 @@ https://gist.github.com/apete/b3278dc2f8c2db6a00369c211ba321db
 (def vcs [[[1 0] [2 1]]
           [[3 -1] [4 0]]])
 
+(defn ^GenericStore wrap-array-reflection
+  "Use reflection to call GenericStore.wrap, bypassing access restrictions."
+  [rows cols data]
+  (let [arr (into-array ComplexNumber data)
+        factory (GenericStore/C128)
+        ;; Find the wrap method with 3 parameters
+        wrap-method (->> (.getMethods GenericStore)
+                         (filter #(= "wrap" (.getName ^java.lang.reflect.Method %)))
+                         (filter #(= 3 (alength (.getParameterTypes ^java.lang.reflect.Method %))))
+                         first)]
+    (when wrap-method
+      (.setAccessible ^java.lang.reflect.Method wrap-method true)
+      ;; invoke takes: (method, object-instance, arg-array)
+      ;; For static methods, object-instance is nil
+      (.invoke ^java.lang.reflect.Method wrap-method nil (into-array Object [factory arr (int cols)])))))
 (def result (wrap-array-reflection 2 2 (->carray vcs)))
 
 ;; Quick bench

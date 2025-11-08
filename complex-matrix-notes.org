@@ -85,12 +85,16 @@ Needs to play nicely with Complex_F64
 *** TODO fastmath (non complex)
 vs Python
 *** DONE apache commons vs ejml
+ejml without much competition
 *** TODO run java matrix benchmark test
 main considerations: ejml vs ojalgo
+*** TODO [#A] Make a prioritised list of goals!
 
 ** API creation
 *** TODO fundamental matrix ops
+Use fastmath tests
 **** DONE ejml
+**** TODO ojalgo?
 
 *** LU decomposition and solver
 *** easy interoperability?
@@ -99,7 +103,7 @@ main considerations: ejml vs ojalgo
 *** real and complex
 interoperability
 *** Ince-Gaussian
-*** Fourire-analysis
+*** Fourier-analysis
 *** Wolframite
 ** Performance tests
 *** Python
