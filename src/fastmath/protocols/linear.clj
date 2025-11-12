@@ -1,5 +1,7 @@
-(ns fastmath.protocols.matrix2)
+(ns fastmath.protocols.linear)
 
+;; TODO:
+;; - Should the protocols be 'Real' and 'Complex' or 'Matrix'Real etc?
 ;; ===================================================
 ;; Notes on notation 
 ;; ===================================================
@@ -41,7 +43,7 @@
 
   ;; Operations
   (add [m1 m2])
-  (add--s [m v])
+  (add--s [m s])
 
   (sub [m] [m1 m2])
 
@@ -53,7 +55,7 @@
   (mul--e [m1 m2])
   (mul--v [m v])
   (mul--vt [m v])
-  (mul--s [m v])
+  (mul--s [m s])
 
   (cholesky [m])
   (determinant [m])
