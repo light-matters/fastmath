@@ -1,18 +1,4 @@
-(ns fastmath.protocols.linear)
-
-;; TODO:
-;; - Should the protocols be 'Real' and 'Complex' or 'Matrix'Real etc?
-;; ===================================================
-;; Notes on notation 
-;; ===================================================
-;; A matrix of doubles is considered the default. Other types are specified according to the legend below. 
-;; 
-;; --e element
-;; --s scalar
-;; --m matrix
-;; --v vector
-;; --vt vector-transpose
-;; ===================================================
+(ns fastmath.protocols.linear-algebra.real.matrix)
 
 (defprotocol MatrixReal
   ;; Transformations
@@ -71,20 +57,5 @@
   (symmetric? [m] [m tol])
   (unitary? [m]))
 
-(defprotocol MatrixComplex
-  (adjoint [m])
-  (conjugate [m])
-  (imag
-    ;; TODO: Should this return a RealDense or a ComplexDense?
-    [m])
-  (real
-    ;; TODO: Should this return a RealDense or a ComplexDense?
-    [m])
-  (hermitian? [m])
-  (real?
-    ;; "Whether or not the matrix only has Real elements, subject to tolerance."
-    [m]))
-
 (defprotocol MatrixDecomposition
   (component [m c]))
-

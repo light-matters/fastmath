@@ -13,7 +13,7 @@
   (:require [fastmath.vector :as v]
             [fastmath.core :as fm]
             [fastmath.matrix.dense.constant :as constant]
-            [fastmath.protocols.matrix2 :as mat])
+            [fastmath.protocols.linear-algebra :as la])
   (:import
    (org.ejml.data DMatrixRMaj)
    (org.ejml.dense.row
@@ -48,7 +48,7 @@
   [])
 
 (deftype RealDense [^DMatrixRMaj M]
-  mat/MatrixReal
+  la/MatrixReal
 
   ;; -------- Transformations --------
   (->seq [_]

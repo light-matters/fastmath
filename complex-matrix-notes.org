@@ -59,6 +59,14 @@ Such is the case, I hope that this project will both help the community directly
 ** state of core.matrix?
 dead!
 ** What API should we follow?
+*** should we branch on 'complex' right at the start?
+i.e. ...matrix.dense.complex.ejml
+or ...complex.matrix.dense.ejml
+*** Should the impementation be high or low in the API?
+i.e. matrix.complex.ejml.dense or complex.matrix.dense.ejml
+
+thinking at the bottom so that the API is conceptual. 
+
 ** implementation on Neanderthal?
 ** How should we insert it in the namespace?
 eventually generalize the fastmath matrix space
@@ -90,6 +98,8 @@ ejml without much competition
 main considerations: ejml vs ojalgo
 *** TODO [#A] Make a prioritised list of goals!
 
+** communication
+*** post on reddit etc. for ideas
 ** API creation
 *** TODO fundamental matrix ops
 Use fastmath tests
@@ -98,6 +108,7 @@ Use fastmath tests
 
 *** LU decomposition and solver
 *** easy interoperability?
+*** fixed size matrices (efficiency)
 ** Integration
 *** clay
 *** real and complex
