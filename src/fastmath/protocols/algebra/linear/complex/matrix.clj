@@ -1,4 +1,4 @@
-(ns fastmath.protocols.linear-algebra.complex.matrix)
+(ns fastmath.protocols.algebra.linear.complex.matrix)
 
 (defprotocol MatrixComplex
   (adjoint [m])

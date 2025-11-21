@@ -1,0 +1,3 @@
+(ns fastmath.constant)
+
+tolerance
