@@ -6,7 +6,7 @@
   (:refer-clojure :exclude [type])
   (:require
 
-   [fastmath.protocols.complex.number :as cn]
+   [fastmath.protocol.algebra.additive.semigroup :as cn]
    [fastmath.protocols.linear-algebra.complex.matrix :as cm]
    [fastmath.matrix.dense.complex.ejml :as cmat]
    ;; TODO:

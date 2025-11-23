@@ -9,7 +9,7 @@
   "
   (:require
    [clojure.string :as str]
-   [fastmath.matrix.dense.constant :as constant]
+   [fastmath.default :as default]
    [fastmath.matrix.dense.real.ejml :as realdense]
    [fastmath.protocols.linear-algebra.complex.number :as cn])
   (:import
@@ -77,7 +77,7 @@
 
 (defn- realZM?
   ([^ZMatrixRMaj M]
-   (realZM? M constant/tolerance--default))
+   (realZM? M default/tolerance--default))
   ([^ZMatrixRMaj M tolerance]
    (let [^"[D" d (.-data M)
          n (alength d)]
@@ -93,7 +93,7 @@
 
   ([^ZMatrixRMaj A] (->str A {}))
   ([^ZMatrixRMaj A {:keys [precision eps max-rows max-cols]
-                    :or   {precision 3 eps constant/tolerance--default max-rows 12 max-cols 12}}]
+                    :or   {precision 3 eps default/tolerance--default max-rows 12 max-cols 12}}]
    (let [num-rows (.numRows A) num-cols (.numCols A)
          rlim (min num-rows ^long max-rows) clim (min num-cols ^long max-cols)
          real? (realZM? A eps)
@@ -164,11 +164,11 @@
       (ComplexNumber. out)))
 
   (real? [_]
-    (< (Math/abs ^double (.-imaginary z)) ^double constant/tolerance--default))
+    (< (Math/abs ^double (.-imaginary z)) ^double default/tolerance--default))
 
   Object
   (toString [_]
-    (format--complex ^double (.-real z) ^double (.-imaginary z) 5 constant/tolerance--default)))
+    (format--complex ^double (.-real z) ^double (.-imaginary z) 5 default/tolerance--default)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                 ComplexDense                                ;
@@ -360,7 +360,7 @@
           AAt (ZMatrixRMaj. (.numRows M) (.numRows M))]
       (CommonOps_ZDRM/multTransA M M AtA)  ;; Aᵀ A
       (CommonOps_ZDRM/multTransB M M AAt)  ;; A Aᵀ
-      (MatrixFeatures_ZDRM/isIdentical AtA AAt constant/tolerance--default)))
+      (MatrixFeatures_ZDRM/isIdentical AtA AAt default/tolerance--default)))
 
   (singular?
     ;; "Approximate, but robust numerical method."
@@ -377,7 +377,7 @@
     (if (= (.numRows M) (.numCols M))
       (MatrixFeatures_ZDRM/isEquals M
                                     (CommonOps_ZDRM/transpose M nil)
-                                    constant/tolerance--default)
+                                    default/tolerance--default)
       false))
   (symmetric? [_ tol]
     (if (= (.numRows M) (.numCols M))
@@ -388,7 +388,7 @@
 
   (unitary? [_]
     ;; For real matrices, “unitary” == orthogonal.
-    (MatrixFeatures_ZDRM/isUnitary M constant/tolerance--default))
+    (MatrixFeatures_ZDRM/isUnitary M default/tolerance--default))
 
   la/MatrixComplex
 
@@ -401,7 +401,7 @@
   (re [_] (realdense/->RealDense (CommonOps_ZDRM/real M nil)))
 
   (hermitian? [_]
-    (MatrixFeatures_ZDRM/isHermitian M constant/tolerance--default))
+    (MatrixFeatures_ZDRM/isHermitian M default/tolerance--default))
 
   (real? [_]
     (realZM? M))
