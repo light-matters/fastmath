@@ -1,5 +1,9 @@
 (ns fastmath.protocol.algebra.coordinate.polar)
 
-(defprotocol Polar
+(defprotocol PolarCoordinate
   (angle [z])
-  (magnitude [z]))
+  (magnitude [z])
+  (polar-values [z]))
+
+(defn ? [x]
+  (satisfies? PolarCoordinate x))

@@ -1,5 +1,12 @@
 (ns fastmath.protocol.algebra.multiplicative.monoid
-  (:require [fastmath.protocol.algebra.multiplicative.semigroup :refer [Semigroup]]))
+  (:require [fastmath.protocol.algebra.multiplicative.semigroup :as semigroup]))
 
 (defprotocol Monoid
   (one [x]))
+
+(def multiply semigroup/multiply)
+
+(defn ? [x]
+  (and
+   (semigroup/? x)
+   (satisfies? Monoid x)))

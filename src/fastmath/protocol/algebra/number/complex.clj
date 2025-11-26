@@ -1,23 +1,34 @@
 (ns fastmath.protocol.algebra.number.complex
-  (:require [fastmath.protocol.algebra.additive.group :as ag]
-            [fastmath.protocol.algebra.multiplicative.group :as mg]
-            [fastmath.protocol.algebra.field :as f]
-            [fastmath.protocol.algebra.normed-space :as ns]
-            [fastmath.protocol.algebra.coordinate.complex :as cc]
-            [fastmath.protocol.algebra.coordinate.polar :as p]))
+  (:require
+   [fastmath.protocol.algebra.coordinate.complex :as complex-coordinate]
+   [fastmath.protocol.algebra.coordinate.polar :as polar-coordinate]
+   [fastmath.protocol.algebra.field :as field]
+   [fastmath.protocol.algebra.normed-space :as normed-space]))
 
-;; (defprotocol NumberComplex
-;;   (->seq [z])
-;;   (->array [z])
+;; TODO: Consider whether or not it would be better to use magnitude,angle as the default format. This is more efficient for multiplication, but less efficient for addition.
+;;
+;;Should we have different implementations to this effect?
 
-;;   )
-(defprotocol Complex)
+(defprotocol ComplexNumber
+  "A placeholder to indicate that a number has implemented all of the methods necessary to function as a `fastmath` complex number. This can be ensured by calling `?`.
+
+   All of the strictly necessary mathematical properties are implemented conventionally with protocols (if you think like a mathematician), i.e. with appeal to the abstract properties. In this way, a complex number can be defined as a field on a normed space that has complex and polar coordinates. 
+
+Other convenience methods are listed below."
+  ;; TODO: maybe add a way of getting the polar coordinates in one go
+  ;; 
+  ;; (real? [z])
+  ;; (imaginary? [z])
+  )
 
 (defn ? [x]
-  (and (satisfies? ag/Group x)
-       (satisfies? mg/Group x)
-       (satisfies? f/Field x)
-       (satisfies? ns/NormedSpace x)
-       (satisfies? cc/Complex x)
-       (satisfies? p/Polar x)
-       (satisfies? Complex x)))
+  (and
+   ;; maths
+   (field/? x)
+   (normed-space/? x)
+   (complex-coordinate/?  x)
+   (polar-coordinate/?  x)
+   ;; convenience
+   (satisfies? clojure.lang.Seqable)
+   ;;
+   (satisfies? ComplexNumber x)))
