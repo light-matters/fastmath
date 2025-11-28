@@ -4,13 +4,13 @@
 
 (defprotocol  Field)
 
-(def add (ring/add))
-(def multiply (ring/multiply))
-(def negate (ring/negate))
-(def one (ring/one))
-(def zero (ring/zero))
+(def add ring/add)
+(def multiply ring/multiply)
+(def negate ring/negate)
+(def one ring/one)
+(def zero ring/zero)
 
-(def one (mgroup/one))
+(def inverse mgroup/inverse)
 
 (defn ? [x]
   (and

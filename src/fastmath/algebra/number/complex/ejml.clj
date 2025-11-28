@@ -6,7 +6,7 @@
   (:require
    [clojure.math :as math]
    [fastmath.default :as default]
-   [fastmath.protocol.algebra.number.complex :as protoComplex]
+   [fastmath.protocol.algebra.number.complex :as Z]
    [fastmath.protocol.algebra.additive.semigroup :as as]
    [fastmath.protocol.algebra.additive.monoid :as am]
    [fastmath.protocol.algebra.additive.group :as ag]
@@ -17,7 +17,8 @@
    [fastmath.protocol.algebra.field :as f]
    [fastmath.protocol.algebra.normed-space :as ns]
    [fastmath.protocol.algebra.coordinate.complex :as cc]
-   [fastmath.protocol.algebra.coordinate.polar :as p])
+   [fastmath.protocol.algebra.coordinate.polar :as polar]
+   [fastmath.core :as m])
   (:import
    (java.lang Math)
    (org.ejml.data Complex_F64 ComplexPolar_F64)
@@ -45,7 +46,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftype ComplexNumber [^Complex_F64 z]
-  protoComplex/ComplexNumber
 
   as/Semigroup
   (add [_ z2]
@@ -56,7 +56,7 @@
   (zero [_] (ComplexNumber. zeroF64))
   ag/Group
   (negate [_]
-    (-> (Complex_F64. (.-real z) (.-imaginary z))
+    (-> (Complex_F64. (- (.-real z)) (- (.-imaginary z)))
         ComplexNumber.))
 
   ms/Semigroup
@@ -68,9 +68,7 @@
   (one [_] (ComplexNumber. oneF64))
   mg/Group
   (inverse [_]
-    (let [out (Complex_F64.)]
-      (ComplexMath_F64/divide 1.0 ^Complex_F64 z out)
-      (ComplexNumber. out)))
+    (ComplexNumber. (.divide (Complex_F64. 1.0 0.0) ^Complex_F64 z)))
 
   r/Ring
 
@@ -78,7 +76,7 @@
 
   ns/NormedSpace
   (norm ^double [_]
-    (let [^ComplexPolar_F64 polar zeroF64]
+    (let [^ComplexPolar_F64 polar (ComplexPolar_F64. 0.0 0.0)]
       (ComplexMath_F64/convert z polar)
       (.-r polar)))
 
@@ -88,35 +86,45 @@
   (conjugate [_]
     (ComplexNumber. (Complex_F64. (.-real z) (* -1.0 (.-imaginary z)))))
 
-  p/PolarCoordinate
+  polar/PolarCoordinate
   (angle ^double [_]
-    (let [^ComplexPolar_F64  polar zeroF64]
-      (ComplexMath_F64/convert z polar)
+    (let [^ComplexPolar_F64  polar (ComplexPolar_F64. 0.0 0.0)]
+      (ComplexMath_F64/convert ^Complex_F64 z polar)
       (.-theta polar)))
   (magnitude ^double [_]
     (let [^ComplexPolar_F64 polar zeroF64]
       (ComplexMath_F64/convert z polar)
       (.-r polar)))
 
-;; (->seq [_] (seq [(.-real z) (.-imaginary z)]))
-  ;; (->array [_] (double-array [(.-real z) (.-imaginary z)]))
-
-  ;; (sub [_ z2]
-  ;;   (let [out (Complex_F64.)]
-  ;;     (ComplexMath_F64/minus z (.-z ^ComplexNumber z2) out)
-  ;;     (ComplexNumber. out)))
-
-  ;; (div [_ z2]
-  ;;   (let [out (Complex_F64.)]
-  ;;     (ComplexMath_F64/divide z ^Complex_F64 (.-z ^ComplexNumber z2) out)
-  ;;     (ComplexNumber. out)))
+  Z/ComplexNumber
+  (subtract [_ z2]
+    (let [out (Complex_F64.)]
+      (ComplexMath_F64/minus z (.-z ^ComplexNumber z2) out)
+      (ComplexNumber. out)))
+  (divide [_ z2]
+    (let [out (Complex_F64.)]
+      (ComplexMath_F64/divide z ^Complex_F64 (.-z ^ComplexNumber z2) out)
+      (ComplexNumber. out)))
+  (square [_]
+    (let [[real imag] [(.-real z) (.-imaginary z)]
+          out (Complex_F64. (- (m/sq real)  (m/sq imag))
+                            (m/* 2.0 real imag))]
+      (ComplexNumber. out)))
+  (square-root [_]
+    (let [out (Complex_F64.)]
+      (ComplexMath_F64/sqrt z ^Complex_F64 out)
+      (ComplexNumber. out)))
 
   clojure.lang.Seqable
   (seq [_] (list (.-real z) (.-imaginary z)))
 
   Object
   (toString [_]
-    (format--complex ^double (.-real z) ^double (.-imaginary z) 5 default/tolerance)))
+    (format--complex ^double (.-real z) ^double (.-imaginary z) 5 default/tolerance))
+  (equals [_ z2]
+    (and (instance? ComplexNumber z2)
+         (let [zz (.-z z2)] (and (== (.-real zz) (.-real z))
+                                 (== (.-imaginary zz) (.-imaginary z)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                  Constants                                  ;
@@ -142,8 +150,15 @@
   ([^double x ^double y] (ComplexNumber. (Complex_F64. x y)))
   ([^double x] (ComplexNumber. (Complex_F64. x 0.0)))
   ([] ZERO))
-(defn i
-  "Same as `complex` above, but in a 'friendlier' syntax."
-  ([^double x ^double y] (ComplexNumber. (Complex_F64. x y)))
-  ([^double x] (ComplexNumber. (Complex_F64. x 0.0)))
-  ([] ZERO))
+
+(def i "Same as `complex` above, but a 'friendlier' syntax."
+  complex)
+
+(comment
+  (seq (i 1.0 1.0))
+
+  (instance? clojure.lang.Seqable (i 1.0 1.0))
+  (f/inverse (i 3 4))
+  (f/negate (i 1.0 -2.0))
+  (polar/angle I-)
+  (Z/square (i 5.0 1.0)))

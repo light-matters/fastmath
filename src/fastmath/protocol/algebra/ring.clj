@@ -15,4 +15,4 @@
   (and
    (agroup/?  x)
    (mmonoid/?  x)
-   (satisfies? r/Ring x)))
+   (satisfies? Ring x)))

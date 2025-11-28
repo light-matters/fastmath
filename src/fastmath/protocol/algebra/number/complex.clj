@@ -15,8 +15,14 @@
    All of the strictly necessary mathematical properties are implemented conventionally with protocols (if you think like a mathematician), i.e. with appeal to the abstract properties. In this way, a complex number can be defined as a field on a normed space that has complex and polar coordinates. 
 
 Other convenience methods are listed below."
-  ;; TODO: maybe add a way of getting the polar coordinates in one go
-  ;; 
+  ;; TODO:
+  ;; - (temp) put core (but not strictly necessary) operations in another protocol
+  ;; - maybe add a way of getting the polar coordinates in one go
+
+  (subtract [z1 z2])
+  (divide [z1 z2])
+  (square [z])
+  (square-root [z])
   ;; (real? [z])
   ;; (imaginary? [z])
   )
@@ -29,6 +35,6 @@ Other convenience methods are listed below."
    (complex-coordinate/?  x)
    (polar-coordinate/?  x)
    ;; convenience
-   (satisfies? clojure.lang.Seqable)
+   (instance? clojure.lang.Seqable x)
    ;;
    (satisfies? ComplexNumber x)))
