@@ -178,16 +178,23 @@ ojalg?
 Maybe we don't need the object/structure branch for the implementations?
 
 There is no 'implementation' of a field that is not an object..?
+
+ns branches should only be made at mutually exclusive properties
 ** matrix
 *** separation of concerns
 protocol.matrix
     structure
         square
         rectangular
-        triangular
+
+    (not mutually exclusive) property 
         symmetric
-        hermitian
+        Hermitian
+        triangular
         diagonal
+        positive-definite
+        orthogonal / unitary
+ 
     representation
         dense
         sparse
