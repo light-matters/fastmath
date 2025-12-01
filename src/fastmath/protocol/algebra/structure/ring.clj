@@ -1,6 +1,6 @@
-(ns fastmath.protocol.algebra.ring
-  (:require [fastmath.protocol.algebra.additive.group :as agroup]
-            [fastmath.protocol.algebra.multiplicative.monoid :as mmonoid]))
+(ns fastmath.protocol.algebra.structure.ring
+  (:require [fastmath.protocol.algebra.structure.additive.group :as agroup]
+            [fastmath.protocol.algebra.structure.multiplicative.monoid :as mmonoid]))
 
 (defprotocol Ring)
 

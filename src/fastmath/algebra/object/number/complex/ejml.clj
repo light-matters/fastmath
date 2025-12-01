@@ -1,4 +1,4 @@
-(ns fastmath.algebra.number.complex.ejml
+(ns fastmath.algebra.object.number.complex.ejml
   "An EJML implementation of complex numbers.
 
    TODO: Finish migrating definitons into formal maths-based protocols.
@@ -6,18 +6,18 @@
   (:require
    [clojure.math :as math]
    [fastmath.default :as default]
-   [fastmath.protocol.algebra.number.complex :as Z]
-   [fastmath.protocol.algebra.additive.semigroup :as as]
-   [fastmath.protocol.algebra.additive.monoid :as am]
-   [fastmath.protocol.algebra.additive.group :as ag]
-   [fastmath.protocol.algebra.multiplicative.semigroup :as ms]
-   [fastmath.protocol.algebra.multiplicative.monoid :as mm]
-   [fastmath.protocol.algebra.multiplicative.group :as mg]
-   [fastmath.protocol.algebra.ring :as r]
-   [fastmath.protocol.algebra.field :as f]
-   [fastmath.protocol.algebra.normed-space :as ns]
-   [fastmath.protocol.algebra.coordinate.complex :as cc]
-   [fastmath.protocol.algebra.coordinate.polar :as polar]
+   [fastmath.protocol.algebra.object.number.complex :as Z]
+   [fastmath.protocol.algebra.structure.additive.semigroup :as as]
+   [fastmath.protocol.algebra.structure.additive.monoid :as am]
+   [fastmath.protocol.algebra.structure.additive.group :as ag]
+   [fastmath.protocol.algebra.structure.multiplicative.semigroup :as ms]
+   [fastmath.protocol.algebra.structure.multiplicative.monoid :as mm]
+   [fastmath.protocol.algebra.structure.multiplicative.group :as mg]
+   [fastmath.protocol.algebra.structure.ring :as r]
+   [fastmath.protocol.algebra.structure.field :as f]
+   [fastmath.protocol.algebra.structure.normed-space :as ns]
+   [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
+   [fastmath.protocol.algebra.structure.coordinate.polar :as polar]
    [fastmath.core :as m])
   (:import
    (java.lang Math)

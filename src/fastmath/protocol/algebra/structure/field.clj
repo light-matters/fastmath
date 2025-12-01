@@ -1,6 +1,6 @@
-(ns fastmath.protocol.algebra.field
-  (:require [fastmath.protocol.algebra.ring :as ring]
-            [fastmath.protocol.algebra.multiplicative.group :as mgroup]))
+(ns fastmath.protocol.algebra.structure.field
+  (:require [fastmath.protocol.algebra.structure.ring :as ring]
+            [fastmath.protocol.algebra.structure.multiplicative.group :as mgroup]))
 
 (defprotocol  Field)
 

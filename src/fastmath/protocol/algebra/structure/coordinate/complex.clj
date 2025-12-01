@@ -1,4 +1,4 @@
-(ns fastmath.protocol.algebra.coordinate.complex)
+(ns fastmath.protocol.algebra.structure.coordinate.complex)
 
 (defprotocol ComplexCoordinate
   (re [z])
