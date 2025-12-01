@@ -175,8 +175,11 @@ i.e. (v/->RealVector)
 ejml methods
 ojalg?
 * API ideas
+Maybe we don't need the object/structure branch for the implementations?
+
+There is no 'implementation' of a field that is not an object..?
 ** matrix
-** separation of concerns
+*** separation of concerns
 protocol.matrix
     structure
         square
