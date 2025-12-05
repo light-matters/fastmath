@@ -1,4 +1,4 @@
-(ns fastmath.api.v1.algebra.linear
+(ns fastmath.api.v1.algebra.general
   "WARNING: experimental & WIP!
 
   Towards a unified, flexible, entrypoint for linear algebra across different types, i.e. for those who don't want to have to think about types.
@@ -6,9 +6,9 @@
   (:refer-clojure :exclude [type])
   (:require
 
-   [fastmath.protocol.algebra.additive.semigroup :as cn]
-   [fastmath.protocols.linear-algebra.complex.matrix :as cm]
-   [fastmath.matrix.dense.complex.ejml :as cmat]
+   ;; [fastmath.protocol.algebra.additive.semigroup :as cn]
+   ;; [fastmath.protocols.linear-algebra.complex.matrix :as cm]
+   ;; [fastmath.matrix.dense.complex.ejml :as cmat]
    ;; TODO:
    ;; - API change to make complex more natural
    ;; - put `i` in a more central, reasonable, place

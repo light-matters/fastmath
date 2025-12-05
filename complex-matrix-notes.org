@@ -89,6 +89,8 @@ Needs to play nicely with `Complex_F64` for `EJML`
 
 would be nice not to have to do this
 ** TODO Should `protocol` be a parallel ns branch or in the same folder as the implementations?
+** Should protocols represent interface contracts?
+i.e. If you implement this, your operation works for all inputs of your type?
 
 * Transform support
 - fft4j
@@ -171,6 +173,7 @@ i.e. (v/->RealVector)
 [[x y] [x y]]
  [x y] [x y]]
 *** I guess all of the operations and decomposition etc. would have to be manually implemented...
+** Do we need a separate matrix and vector namespace?
 * Parallel options available
 ejml methods
 ojalg?

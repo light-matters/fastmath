@@ -6,20 +6,6 @@
   (:require
    [clojure.math :as math]
    [fastmath.default :as default]
-<<<<<<< HEAD:src/fastmath/algebra/number/complex/ejml.clj
-   [fastmath.protocol.algebra.number.complex :as Z]
-   [fastmath.protocol.algebra.additive.semigroup :as as]
-   [fastmath.protocol.algebra.additive.monoid :as am]
-   [fastmath.protocol.algebra.additive.group :as ag]
-   [fastmath.protocol.algebra.multiplicative.semigroup :as ms]
-   [fastmath.protocol.algebra.multiplicative.monoid :as mm]
-   [fastmath.protocol.algebra.multiplicative.group :as mg]
-   [fastmath.protocol.algebra.ring :as r]
-   [fastmath.protocol.algebra.field :as f]
-   [fastmath.protocol.algebra.space.normed.clj :as ns]
-   [fastmath.protocol.algebra.coordinate.complex :as cc]
-   [fastmath.protocol.algebra.coordinate.polar :as polar]
-=======
    [fastmath.protocol.algebra.object.number.complex :as Z]
    [fastmath.protocol.algebra.structure.additive.semigroup :as as]
    [fastmath.protocol.algebra.structure.additive.monoid :as am]
@@ -32,7 +18,6 @@
    [fastmath.protocol.algebra.structure.normed-space :as ns]
    [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
    [fastmath.protocol.algebra.structure.coordinate.polar :as polar]
->>>>>>> 7d8ae7ecc20c693007f6529b34c4f3a90d495bb1:src/fastmath/algebra/object/number/complex/ejml.clj
    [fastmath.core :as m])
   (:import
    (java.lang Math)
@@ -67,7 +52,7 @@
     (let [out (Complex_F64.)]
       (ComplexMath_F64/plus z (.-z ^ComplexNumber z2) out)
       (ComplexNumber. out)))
-  am/Monoid
+  am/AdditiveMonoid
   (zero [_] (ComplexNumber. zeroF64))
   ag/AdditiveGroup
   (negate [_]
@@ -79,7 +64,7 @@
     (let [out (Complex_F64.)]
       (ComplexMath_F64/multiply z ^Complex_F64 (.-z ^ComplexNumber z2) out)
       (ComplexNumber. out)))
-  mm/Monoid
+  mm/MultiplicativeMonoid
   (one [_] (ComplexNumber. oneF64))
   mg/MultiplicativeGroup
   (inverse [_]

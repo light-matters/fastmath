@@ -1,7 +1,7 @@
 (ns fastmath.protocol.algebra.structure.additive.monoid
   (:require [fastmath.protocol.algebra.structure.additive.semigroup :as semigroup]))
 
-(defprotocol Monoid
+(defprotocol AdditiveMonoid
   (zero [x]))
 
 (def add semigroup/add)

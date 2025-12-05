@@ -1,7 +1,7 @@
 (ns fastmath.protocol.algebra.structure.multiplicative.monoid
   (:require [fastmath.protocol.algebra.structure.multiplicative.semigroup :as semigroup]))
 
-(defprotocol Monoid
+(defprotocol MultiplicativeMonoid
   (one [x]))
 
 (def multiply semigroup/multiply)

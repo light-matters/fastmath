@@ -1,6 +1,6 @@
 (ns fastmath.protocol.algebra.structure.additive.semigroup)
 
-(defprotocol Semigroup
+(defprotocol AdditiveSemigroup
   (add [x y]))
 
 (defn ? [x]
