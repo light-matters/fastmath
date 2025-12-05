@@ -15,7 +15,7 @@
    [fastmath.protocol.algebra.multiplicative.group :as mg]
    [fastmath.protocol.algebra.ring :as r]
    [fastmath.protocol.algebra.field :as f]
-   [fastmath.protocol.algebra.normed-space :as ns]
+   [fastmath.protocol.algebra.space.normed.clj :as ns]
    [fastmath.protocol.algebra.coordinate.complex :as cc]
    [fastmath.protocol.algebra.coordinate.polar :as polar]
    [fastmath.core :as m])
@@ -54,7 +54,7 @@
       (ComplexNumber. out)))
   am/Monoid
   (zero [_] (ComplexNumber. zeroF64))
-  ag/Group
+  ag/AdditiveGroup
   (negate [_]
     (-> (Complex_F64. (- (.-real z)) (- (.-imaginary z)))
         ComplexNumber.))
@@ -66,7 +66,7 @@
       (ComplexNumber. out)))
   mm/Monoid
   (one [_] (ComplexNumber. oneF64))
-  mg/Group
+  mg/MultiplicativeGroup
   (inverse [_]
     (ComplexNumber. (.divide (Complex_F64. 1.0 0.0) ^Complex_F64 z)))
 

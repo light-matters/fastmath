@@ -3,7 +3,7 @@
    [fastmath.protocol.algebra.coordinate.complex :as complex-coordinate]
    [fastmath.protocol.algebra.coordinate.polar :as polar-coordinate]
    [fastmath.protocol.algebra.field :as field]
-   [fastmath.protocol.algebra.normed-space :as normed-space]))
+   [fastmath.protocol.algebra.space.normed.clj :as normed-space]))
 
 ;; TODO: Consider whether or not it would be better to use magnitude,angle as the default format. This is more efficient for multiplication, but less efficient for addition.
 ;;

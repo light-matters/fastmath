@@ -1,7 +1,7 @@
 (ns fastmath.protocol.algebra.additive.group
   (:require [fastmath.protocol.algebra.additive.monoid :as monoid]))
 
-(defprotocol Group
+(defprotocol AdditiveGroup
   (negate [x]))
 
 (def add monoid/add)
@@ -10,4 +10,4 @@
 (defn ? [x]
   (and
    (monoid/? x)
-   (satisfies? Group x)))
+   (satisfies? AdditiveGroup x)))

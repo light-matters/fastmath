@@ -7,7 +7,7 @@
    [fastmath.protocol.algebra.coordinate.complex :as coor]
    [fastmath.protocol.algebra.coordinate.polar :as polar]
    [fastmath.protocol.algebra.field :as field]
-   [fastmath.protocol.algebra.normed-space :as nspace]
+   [fastmath.protocol.algebra.space.normed.clj :as nspace]
    [fastmath.protocol.algebra.number.complex :as Z]))
 
 (defn protocol-tests

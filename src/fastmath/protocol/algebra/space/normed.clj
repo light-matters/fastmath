@@ -1,4 +1,4 @@
-(ns fastmath.protocol.algebra.normed-space)
+(ns fastmath.protocol.algebra.space.normed)
 
 (defprotocol NormedSpace
   (norm [x]))
