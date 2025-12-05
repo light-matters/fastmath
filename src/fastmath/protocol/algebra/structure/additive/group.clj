@@ -1,5 +1,5 @@
-(ns fastmath.protocol.algebra.additive.group
-  (:require [fastmath.protocol.algebra.additive.monoid :as monoid]))
+(ns fastmath.protocol.algebra.structure.additive.group
+  (:require [fastmath.protocol.algebra.structure.additive.monoid :as monoid]))
 
 (defprotocol AdditiveGroup
   (negate [x]))

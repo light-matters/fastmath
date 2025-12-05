@@ -1,19 +1,27 @@
-(ns fastmath.protocol.algebra.number.complex-test
+(ns fastmath.protocol.algebra.object.number.complex-test
   ;; TODO:
   ;; - Check that all protocol methods are implemented.
   (:require
    [clojure.test :refer [is testing]]
    [fastmath.core :as m]
+<<<<<<< HEAD:test/fastmath/protocol/algebra/number/complex_test.clj
    [fastmath.protocol.algebra.coordinate.complex :as coor]
    [fastmath.protocol.algebra.coordinate.polar :as polar]
    [fastmath.protocol.algebra.field :as field]
    [fastmath.protocol.algebra.space.normed.clj :as nspace]
    [fastmath.protocol.algebra.number.complex :as Z]))
+=======
+   [fastmath.protocol.algebra.structure.coordinate.complex :as coor]
+   [fastmath.protocol.algebra.structure.coordinate.polar :as polar]
+   [fastmath.protocol.algebra.structure.field :as field]
+   [fastmath.protocol.algebra.structure.normed-space :as nspace]
+   [fastmath.protocol.algebra.object.number.complex :as Z]))
+>>>>>>> 7d8ae7ecc20c693007f6529b34c4f3a90d495bb1:test/fastmath/protocol/algebra/object/number/complex_test.clj
 
 (defn protocol-tests
   "Takes a complex number constructor, `i`, and uses it to check conformity with the protocol."
   [i]
-  (let [        ;; TODO: Should check that the following constants are implemented
+  (let [;; TODO: Should check that the following constants are implemented
         ONE (i 1.0 0.0)
         I (i 0.0 1.0)
         I- (i 0.0 -1.0)]

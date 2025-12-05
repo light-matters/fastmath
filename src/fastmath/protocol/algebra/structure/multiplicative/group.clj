@@ -1,5 +1,5 @@
-(ns fastmath.protocol.algebra.multiplicative.group
-  (:require [fastmath.protocol.algebra.multiplicative.monoid :as mmonoid]))
+(ns fastmath.protocol.algebra.structure.multiplicative.group
+  (:require [fastmath.protocol.algebra.structure.multiplicative.monoid :as mmonoid]))
 
 (defprotocol MultiplicativeGroup
   (inverse [x]))

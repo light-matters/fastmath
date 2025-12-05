@@ -1,4 +1,4 @@
-(ns fastmath.protocol.algebra.coordinate.polar)
+(ns fastmath.protocol.algebra.structure.coordinate.polar)
 
 (defprotocol PolarCoordinate
   (angle [z])

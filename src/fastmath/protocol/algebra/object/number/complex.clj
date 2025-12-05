@@ -1,9 +1,16 @@
-(ns fastmath.protocol.algebra.number.complex
+(ns fastmath.protocol.algebra.object.number.complex
   (:require
+<<<<<<< HEAD:src/fastmath/protocol/algebra/number/complex.clj
    [fastmath.protocol.algebra.coordinate.complex :as complex-coordinate]
    [fastmath.protocol.algebra.coordinate.polar :as polar-coordinate]
    [fastmath.protocol.algebra.field :as field]
    [fastmath.protocol.algebra.space.normed.clj :as normed-space]))
+=======
+   [fastmath.protocol.algebra.structure.coordinate.complex :as complex-coordinate]
+   [fastmath.protocol.algebra.structure.coordinate.polar :as polar-coordinate]
+   [fastmath.protocol.algebra.structure.field :as field]
+   [fastmath.protocol.algebra.structure.normed-space :as normed-space]))
+>>>>>>> 7d8ae7ecc20c693007f6529b34c4f3a90d495bb1:src/fastmath/protocol/algebra/object/number/complex.clj
 
 ;; TODO: Consider whether or not it would be better to use magnitude,angle as the default format. This is more efficient for multiplication, but less efficient for addition.
 ;;

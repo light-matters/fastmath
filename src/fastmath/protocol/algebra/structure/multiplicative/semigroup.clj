@@ -1,4 +1,4 @@
-(ns fastmath.protocol.algebra.multiplicative.semigroup)
+(ns fastmath.protocol.algebra.structure.multiplicative.semigroup)
 
 (defprotocol Semigroup
   (multiply [x y]))

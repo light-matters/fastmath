@@ -85,7 +85,11 @@ and complex (field?) vectors
 
 compare and make a decision
 ** Do we have to change how complex numbers are implemented in fastmath?
-Needs to play nicely with Complex_F64
+Needs to play nicely with `Complex_F64` for `EJML`
+
+would be nice not to have to do this
+** TODO Should `protocol` be a parallel ns branch or in the same folder as the implementations?
+
 * Transform support
 - fft4j
 * Checklist
@@ -170,7 +174,40 @@ i.e. (v/->RealVector)
 * Parallel options available
 ejml methods
 ojalg?
+* API ideas
+Maybe we don't need the object/structure branch for the implementations?
 
+There is no 'implementation' of a field that is not an object..?
+
+ns branches should only be made at mutually exclusive properties
+** matrix
+*** separation of concerns
+protocol.matrix
+    structure
+        square
+        rectangular
+
+    (not mutually exclusive) property 
+        symmetric
+        Hermitian
+        triangular
+        diagonal
+        positive-definite
+        orthogonal / unitary
+ 
+    representation
+        dense
+        sparse
+            csr
+            csc
+            coo
+        banded
+        block
+    scalar
+        real
+        complex
+        rational
+        integer
 * Notes
 Fastmath uses a mixture of apache and hard-coded clojure?
 ** Resources
