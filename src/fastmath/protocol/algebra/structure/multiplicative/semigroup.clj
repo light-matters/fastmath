@@ -1,7 +1,7 @@
 (ns fastmath.protocol.algebra.structure.multiplicative.semigroup)
 
-(defprotocol Semigroup
+(defprotocol MultiplicativeSemigroup
   (multiply [x y]))
 
 (defn ? [x]
-  (satisfies? Semigroup x))
+  (satisfies? MultiplicativeSemigroup x))

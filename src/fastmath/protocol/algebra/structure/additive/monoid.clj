@@ -9,4 +9,4 @@
 (defn ? [x]
   (and
    (semigroup/? x)
-   (satisfies? Monoid x)))
+   (satisfies? AdditiveMonoid x)))

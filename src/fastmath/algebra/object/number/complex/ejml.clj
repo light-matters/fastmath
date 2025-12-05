@@ -15,7 +15,7 @@
    [fastmath.protocol.algebra.structure.multiplicative.group :as mg]
    [fastmath.protocol.algebra.structure.ring :as r]
    [fastmath.protocol.algebra.structure.field :as f]
-   [fastmath.protocol.algebra.structure.normed-space :as ns]
+   [fastmath.protocol.algebra.structure.space.normed :as ns]
    [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
    [fastmath.protocol.algebra.structure.coordinate.polar :as polar]
    [fastmath.core :as m])
@@ -47,7 +47,7 @@
 
 (deftype ComplexNumber [^Complex_F64 z]
 
-  as/Semigroup
+  as/AdditiveSemigroup
   (add [_ z2]
     (let [out (Complex_F64.)]
       (ComplexMath_F64/plus z (.-z ^ComplexNumber z2) out)
@@ -59,7 +59,7 @@
     (-> (Complex_F64. (- (.-real z)) (- (.-imaginary z)))
         ComplexNumber.))
 
-  ms/Semigroup
+  ms/MultiplicativeSemigroup
   (multiply [_ z2]
     (let [out (Complex_F64.)]
       (ComplexMath_F64/multiply z ^Complex_F64 (.-z ^ComplexNumber z2) out)

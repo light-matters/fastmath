@@ -1,4 +1,8 @@
-(ns fastmath.algebra.object.matrix.rectangular.complex.ejml
+;; WARNING: This namespace is temporary and dev-only
+;; It is simply holding implementations that have not been moved yet.
+;; 
+(ns  ^:deprecated
+ fastmath.algebra.object.matrix.rectangular.complex.ejml
   "Implementing complex matrices using EJML as a backend [https://github.com/lessthanoptimal/ejml].
   "
   (:require

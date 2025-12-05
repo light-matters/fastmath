@@ -4,14 +4,19 @@
   (:require
    [clojure.string :as str]
    [fastmath.default :as default]
+   [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.protocol.representation.d2 :as d2]
    [fastmath.protocol.algebra.structure.additive.semigroup :as asg]
    [fastmath.protocol.algebra.structure.additive.monoid :as am]
    [fastmath.protocol.algebra.structure.additive.group :as ag]
    [fastmath.protocol.algebra.structure.space.normed :as ns]
+   [fastmath.protocol.algebra.structure.space.vector :as vs]
    [fastmath.protocol.algebra.structure.module :as module]
+   [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
+
    [fastmath.protocol.algebra.object.matrix.general :as gmat]
-   [fastmath.protocol.algebra.object.matrix.rectangular :as rmat])
+   [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
+   [fastmath.protocol.algebra.object.matrix.complex :as cmat])
   (:import
    (java.lang Math)
    (org.ejml.data Complex_F64 ComplexPolar_F64 ZMatrixRMaj)
@@ -70,7 +75,7 @@
 
 (defn- realZM?
   ([^ZMatrixRMaj M]
-   (realZM? M default/tolerance--default))
+   (realZM? M default/tolerance))
   ([^ZMatrixRMaj M tolerance]
    (let [^"[D" d (.-data M)
          n (alength d)]
@@ -86,7 +91,7 @@
 
   ([^ZMatrixRMaj A] (->str A {}))
   ([^ZMatrixRMaj A {:keys [precision eps max-rows max-cols]
-                    :or   {precision 3 eps default/tolerance--default max-rows 12 max-cols 12}}]
+                    :or   {precision 3 eps default/tolerance max-rows 12 max-cols 12}}]
    (let [num-rows (.numRows A) num-cols (.numCols A)
          rlim (min num-rows ^long max-rows) clim (min num-cols ^long max-cols)
          real? (realZM? A eps)
@@ -127,11 +132,11 @@
       (CommonOps_ZDRM/add M B out)
       (ComplexDense. out)))
 
-  asg/AdditiveMonoid
+  am/AdditiveMonoid
   (zero [_] (.zero (ZMatrixRMaj. (.numRows M) (.numCols M))))
   ;; TODO: Check if `.zero` is necessary
 
-  asg/AdditiveGroup
+  ag/AdditiveGroup
   (negate [_]
     (let [A (.copy M)]
       (CommonOps_ZDRM/scale -1.0 0.0 A)
@@ -161,7 +166,7 @@
     "Complex Frobenius inner product <A,B> = sum(conj(A_ij) * B_ij)."
    ;; TODO: Return complex number
     (let [B (.M ^ComplexDense other)
-          ^doubles da (.getData A)
+          ^doubles da M
           ^doubles db (.getData B)
           n (.getLength da)]
       (loop [i 0
@@ -180,14 +185,14 @@
 
   (outer [_ other]
     (let [B (.M ^ComplexDense other)
-          a-rows (.getNumRows A)
-          a-cols (.getNumCols A)
+          a-rows (.getNumRows M)
+          a-cols (.getNumCols M)
           b-rows (.getNumRows B)
           b-cols (.getNumCols B)
           out    (ZMatrixRMaj. (* a-rows b-rows) (* a-cols b-cols))]
       (dotimes [i a-rows]
         (dotimes [j a-cols]
-          (let [^org.ejml.data.Complex_F64 aij (.get A i j)
+          (let [^org.ejml.data.Complex_F64 aij (.get M i j)
                 ar (.real aij)
                 ai (.imaginary aij)]
             (dotimes [p b-rows]
@@ -230,6 +235,13 @@
           out (ZMatrixRMaj. (.numRows M) (.numCols M))]
       (CommonOps_ZDRM/subtract M B out)
       (ComplexDense. out)))
+  (transpose [_]
+    (let [T (ZMatrixRMaj. (.numCols M) (.numRows M))]
+      (CommonOps_ZDRM/transpose M T)
+      (ComplexDense. T)))
+
+  (square? [_]
+    (= (.numRows M) (.numCols M)))
 
 ;; ==================================================
   d2/D2
@@ -272,94 +284,29 @@
           (aset-double out i j (getc M i j))))
       out))
 ;; ==================================================
+  cc/ComplexCoordinate
+;; ==================================================
+  (re [_] (realdense/->RealDense (CommonOps_ZDRM/real M nil)))
+  (im [_] (realdense/->RealDense (CommonOps_ZDRM/imaginary M nil)))
+  (conjugate [_] (ComplexDense. (CommonOps_ZDRM/conjugate M nil)))
 
-  (cholesky [_]
-    (let [n (.numRows ^ZMatrixRMaj M)
-          _ (when (not= n (.numCols ^ZMatrixRMaj M))
-              (throw (ex-info "Cholesky requires square matrix" {:shape [n (.numCols M)]})))
-          ^CholeskyDecomposition_F64 chol (DecompositionFactory_ZDRM/chol n true)]
-      (when-not (.decompose chol M)
-        (throw (ex-info "Cholesky failed (matrix not SPD)"
-                        {:shape [n n]})))
-      (let [L (.getT chol (ZMatrixRMaj. n n))]   ; lower if 'true' above
-        {:L (ComplexDense. L) :lower? true :spd? true})))
-
-  (determinant [_]
-    (CommonOps_ZDRM/det M))
-
-  (inverse [_]
-    (let [out (ZMatrixRMaj. (.numRows M) (.numCols M))]
-      (CommonOps_ZDRM/invert M out)
-      (ComplexDense. out)))
-
-  (solve [this v]
-    (let [^ZMatrixRMaj B (.M ^ComplexDense v)
-          X (ZMatrixRMaj. (.numRows B) (.numCols B))]
-      (CommonOps_ZDRM/solve M B X)
-      (ComplexDense. X)))
-
-  (trace [_]
-    (CommonOps_ZDRM/trace M nil))
-
-  (transpose [_]
-    (let [T (ZMatrixRMaj. (.numCols M) (.numRows M))]
-      (CommonOps_ZDRM/transpose M T)
-      (ComplexDense. T)))
-
-;; ;; -------- Predicates --------
-  (normal? [_]
-    ;; AᵀA ≈ AAᵀ
-    (let [AtA (ZMatrixRMaj. (.numCols M) (.numCols M))
-          AAt (ZMatrixRMaj. (.numRows M) (.numRows M))]
-      (CommonOps_ZDRM/multTransA M M AtA)  ;; Aᵀ A
-      (CommonOps_ZDRM/multTransB M M AAt)  ;; A Aᵀ
-      (MatrixFeatures_ZDRM/isIdentical AtA AAt default/tolerance--default)))
-
-  (singular?
-    ;; "Approximate, but robust numerical method."
-    [_]
-    (let [^LUDecomposition_F64 lu (DecompositionFactory_ZDRM/lu
-                                   (.numRows M) (.numCols M))]
-      (or (not (.decompose lu M))
-          (.isSingular lu))))
-
-  (square? [_]
-    (= (.numRows M) (.numCols M)))
-
-  (symmetric? [_]
-    (if (= (.numRows M) (.numCols M))
-      (MatrixFeatures_ZDRM/isEquals M
-                                    (CommonOps_ZDRM/transpose M nil)
-                                    default/tolerance--default)
-      false))
-  (symmetric? [_ tol]
-    (if (= (.numRows M) (.numCols M))
-      (MatrixFeatures_ZDRM/isEquals M
-                                    (CommonOps_ZDRM/transpose M nil)
-                                    tol)
-      false))
-
-  (unitary? [_]
-    ;; For real matrices, “unitary” == orthogonal.
-    (MatrixFeatures_ZDRM/isUnitary M default/tolerance--default))
-
-  la/MatrixComplex
-
+;; ==================================================
+  cmat/ComplexMatrix
+;; ==================================================
   (adjoint [_]
     (let [^ZMatrixRMaj out (ZMatrixRMaj. (.numCols M) (.numRows M))]
       (CommonOps_ZDRM/transposeConjugate M out)
       (ComplexDense. out)))
-  (conjugate [_] (ComplexDense. (CommonOps_ZDRM/conjugate M nil)))
-  (im [_] (realdense/->RealDense (CommonOps_ZDRM/imaginary M nil)))
-  (re [_] (realdense/->RealDense (CommonOps_ZDRM/real M nil)))
 
-  (hermitian? [_]
-    (MatrixFeatures_ZDRM/isHermitian M default/tolerance--default))
+  ;; (hermitian? [_]
+  ;;   (MatrixFeatures_ZDRM/isHermitian M default/tolerance))
 
   (real? [_]
     (realZM? M))
 
+;; ==================================================
   Object
+;; ==================================================
   (toString [_]
     (print! M)))
 

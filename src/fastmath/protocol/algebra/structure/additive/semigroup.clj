@@ -4,4 +4,4 @@
   (add [x y]))
 
 (defn ? [x]
-  (satisfies? Semigroup x))
+  (satisfies? AdditiveSemigroup x))

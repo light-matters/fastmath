@@ -7,7 +7,7 @@
    [fastmath.protocol.algebra.structure.coordinate.complex :as coor]
    [fastmath.protocol.algebra.structure.coordinate.polar :as polar]
    [fastmath.protocol.algebra.structure.field :as field]
-   [fastmath.protocol.algebra.structure.normed-space :as nspace]
+   [fastmath.protocol.algebra.structure.space.normed :as nspace]
    [fastmath.protocol.algebra.object.number.complex :as Z]))
 
 (defn protocol-tests
@@ -45,5 +45,14 @@
       (is (= (i 25.0 0.0) (Z/square (i 5.0 0.0))))
       (is (= (m/sqrt 2.0) (nspace/norm (i 1.0 1.0)))))))
 
-
-
+(comment
+  (require '[fastmath.algebra.object.number.complex.ejml :as sut])
+  (require '[fastmath.protocol.algebra.structure.ring :as ring])
+  (require '[fastmath.protocol.algebra.structure.additive.semigroup :as asg])
+  (require '[fastmath.protocol.algebra.structure.additive.monoid :as am])
+  (require '[fastmath.protocol.algebra.structure.additive.group :as ag])
+  (require '[fastmath.protocol.algebra.structure.multiplicative.semigroup :as msg])
+  (require '[fastmath.protocol.algebra.structure.multiplicative.monoid :as mmonoid])
+  (require '[fastmath.protocol.algebra.structure.multiplicative.group :as mgroup])
+  (def I (sut/i 0.0 1.0))
+  (satisfies? msg/MultiplicativeSemigroup I))
