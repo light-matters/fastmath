@@ -1,0 +1,45 @@
+#+title: Midterm Report
+
+* Overview
+Due to various circumstances - life, the universe and everything etc. - this project started significantly later than it should have and I apologise for that. It did however gain momentum quickly. Below, I consider the progress, as measured both chronologically and according to milestone. In a nutshell though, I have considered different possible avenues of implementation, played with various API strategies and made a couple of draft implementations.  
+
+* Surveying the scene 
+The first task of the project was to more concretely situate the goals with respect to what already exists: that is, with respect to `fastmath` itself, the wider Clojure ecosystem and the available java libraries. 
+
+It was clear from the outset that `fastmath` hadn't yet implemented complex matrices, but how real matrices and complex numbers themselves were implemented, was still a question. Thanks to a valuable discussion with generateme though, I had my first look at the depths and came to understand the mixture of Apache Commons and hard-coded Clojure that made up the library as it was.
+
+It was concluded that `core.matrix`, rightly or wrongly, was currently dead to the community and not the right avenue for this project. The next big Clojure allies were Neanderthal and dtype-next. Both of these are very powerful and mature, but neanderthal was considered too low-level for fastmath and dtype-next, although potentially promising, would realistically require a lot of original code writing, with most operations and decomposition etc. needing to be implemented manually. The maths section of the `qclojure` library was also considered with interest, but it wasn't implemented with efficiency as a goal. Instead, it will be used as something of a model consumer for this complex matrix project.
+
+The conclusion therefore, was, at least initially, to wrap a java library. But which one? And how? The natural choice, would have beeen to extend the coverage of [[https://commons.apache.org/proper/commons-math/][Apache Commons]], but, as a working physicist, performance is a strong goal for me and it seemed that there were faster options available. Surveying the existing documentation online,     `jblas` looked powerful, but has complicated dependencies and so the best all round options (as demonstrated by the  [[https://github.com/lessthanoptimal/Java-Matrix-Benchmark][Java Matrix Benchmark]], and filtered by available 'complex' API) seemed to be [[https://github.com/lessthanoptimal/ejml][EJML]] and [[https://github.com/optimatika/ojAlgo][ojAlgo]]. I experimented with both of these libraries somewhat and my feeling is that ojAlgo has the greater performance, but that it's API is much less intuitive. It took me significant time to work out how to do basic constructions and operations - and I also found a bug that required reflection (in the Java sense!) to overcome. Using EJML however, was very straightforward and I could quickly draft a solution. Going forward therefore, in the knowledge that this project has a finite deadline, I decided to continue with EJML, but with a caveat. I wanted to keep the implementation details abstracted, so that we can swap alternative backends in and out more easily in the future.
+* Revised goals and towards future-proofed user-experience
+Realising that I might have to change how complex 'numbers' are implemented opened up a considerable can of worms, as did the temptation of unifying the complex implementation with the real implementation. In fact, (over)thinking and implementing a separation of user experience from the Java backend took up much of the remaining time so far. And the decision of how much to change of the existing `fastmath` API is an ongoing question, that will have to be finalized with generateme in the second half. 
+
+Fundamentally, the tension in this project is to make a library that is easy to use for maths/physics-minded people, is flexible enough to be extended into the future and yet still still fast enough to live up to the library's name. The current solution therefore is a sophisticated hierarchy of protocols: to represent mathematical identities, and for fast implementation; as well as a new, versioned, multimethod-based API. This second layer features overloaded mathematical operators such that the full linear algebra stack can be used intuitively, with operator ordering and type coercion happening 'under the hood'. If this proves too much of a performance cost though, then you can simply revert to the explicit protocol methods. 
+
+As an example, rather than `fastmath.protocols.matrix` beeing one of only two protocols, we now have a full mathematical structure available, with implementations like `fastmath.algebra.object.number.complex.ejml` and `fastmath.algebra.object.matrix.rectangular.complex.ejml`. This provides more obvious places for future specializations or alternative backends.
+
+With mathematical properties, we can use Clojure protocols as they were intended, for flexibility and without reinventing the wheel, when it comes to how to partition functions. For example, a complex number, can now be easily implemented according to its definition: as 'a field on a normed space that has complex and polar coordinates'. What is a field you might ask? Well, it's an algebraic structure that forms a ring and a multiplicative group. As an example, that last sentence can now be represented programmatically (below). And by structuring the protocols this way, we get polymorphism across different types and domains for free. 
+
+#+begin_src clojure
+(ns fastmath.protocol.algebra.structure.field
+  (:require [fastmath.protocol.algebra.structure.ring :as ring]
+            [fastmath.protocol.algebra.structure.multiplicative.group :as mgroup]))
+
+(defprotocol  Field)
+
+(def add ring/add)
+(def multiply ring/multiply)
+(def negate ring/negate)
+(def one ring/one)
+(def zero ring/zero)
+
+(def inverse mgroup/inverse)
+
+(defn ? [x]
+  (and
+   (ring/?  x)
+   (mgroup/?  x)
+   (satisfies? Field x)))
+#+end_src
+* Outlook
+Having considered the architecture, API creation and first implementation tests, the project, as a whole, is on a firm footing for development. With the expansion of API goals however, the proposal metrics will have to be reprioritised. In this light, the next steps will be to widen the matrix implementations beyond basic operations and to integrate them with other `fastmath` functions, like decomposition and fourier functions. After this, I will focus on integration with the `clay` system, so that some sort of report and documentation can be published on time. On the current trajectory, it's not clear that the performance comparisons, for example, will be completed during the official funding period, but, if not, they will surely follow promptly.

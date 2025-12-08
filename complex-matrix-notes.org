@@ -92,6 +92,17 @@ would be nice not to have to do this
 ** Should protocols represent interface contracts?
 i.e. If you implement this, your operation works for all inputs of your type?
 
+** Is it convenient (in EJML) to coerce ZMatrices to DMatrices if all of the elements are real?
+** Should 'm' be replaced with 'M' as the standard placeholder?
+** Does fastmath have a 'nice' complex number string output?
+** Should complex matrices come under complex or matrix?
+** Where should the implementation of complex number be, if matrices are going to interact with them consistently?
+** Similarly to complex number, where should constants like default tolerance be found?
+** Would an implementation based on dtype-next be efficient?
+[[x y] [x y]]
+ [x y] [x y]]
+*** I guess all of the operations and decomposition etc. would have to be manually implemented...
+** Do we need a separate matrix and vector namespace?
 * Transform support
 - fft4j
 * Checklist
@@ -162,18 +173,6 @@ argument order is strange. Need to specify if it is real before rectangular.
 ** vec->...
 could cut the vec?
 i.e. (v/->RealVector)
-* Questions
-** Is it convenient (in EJML) to coerce ZMatrices to DMatrices if all of the elements are real?
-** Should 'm' be replaced with 'M' as the standard placeholder?
-** Does fastmath have a 'nice' complex number string output?
-** Should complex matrices come under complex or matrix?
-** Where should the implementation of complex number be, if matrices are going to interact with them consistently?
-** Similarly to complex number, where should constants like default tolerance be found?
-** Would an implementation based on dtype-next be efficient?
-[[x y] [x y]]
- [x y] [x y]]
-*** I guess all of the operations and decomposition etc. would have to be manually implemented...
-** Do we need a separate matrix and vector namespace?
 * Parallel options available
 ejml methods
 ojalg?
@@ -220,4 +219,5 @@ Fastmath uses a mixture of apache and hard-coded clojure?
 - 'fastest' java matrix library?! (https://github.com/optimatika/ojAlgo)
 
   Confusing complex number support. Probably doesn't do matrix multiplication. 
+  -    This was wrong. Does do complex matrices, but found a bug.
   - might be a good default for real operations?
