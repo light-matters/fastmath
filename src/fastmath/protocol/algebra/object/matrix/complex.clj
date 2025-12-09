@@ -12,6 +12,12 @@
     ;;")
     [A]))
 
+(def add rmat/add)
+(def zero rmat/zero)
+(def negate rmat/negate)
+(def scale rmat/scale)
+(def norm rmat/norm)
+
 (defn ? [x]
   (and
    (satisfies? rmat/RectangularMatrix x)

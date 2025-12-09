@@ -1,4 +1,4 @@
-(ns fastmath.matrix.dense.real.apache
+(ns fastmath.matrix.dense.real.original
   "Provides tools for working with various matrix types, including fixed-size (2x2, 3x3, 4x4), Java `double[][]` arrays, and Apache Commons Math `RealMatrix`.
 
   It offers efficient mathematical operations for linear algebra, geometric transformations, and data manipulation, unifying different representations under a common protocol approach where appropriate."

@@ -19,7 +19,7 @@
   (transpose [A])
 
   (square? [A])
-  ;; TODO: square? should maybe part of the function nses
+  ;; TODO: square? should maybe be part of the function nses
   )
 (defn ? [x]
   (and

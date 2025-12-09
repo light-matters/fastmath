@@ -8,8 +8,8 @@
 (def add vspace/add)
 (def zero vspace/zero)
 (def negate vspace/negate)
-(def norm nspace/norm)
 (def scale vspace/scale)
+(def norm nspace/norm)
 
 (defn ? [x]
   (and

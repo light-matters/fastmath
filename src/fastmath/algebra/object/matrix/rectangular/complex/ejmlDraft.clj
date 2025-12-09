@@ -2,7 +2,7 @@
 ;; It is simply holding implementations that have not been moved yet.
 ;; 
 (ns  ^:deprecated
- fastmath.algebra.object.matrix.rectangular.complex.ejml
+ fastmath.algebra.object.matrix.rectangular.complex.ejmlDraft
   "Implementing complex matrices using EJML as a backend [https://github.com/lessthanoptimal/ejml].
   "
   (:require
@@ -373,7 +373,7 @@
   (^ComplexDense [^long n ^long o ^doubles data]
    (->ComplexDense (ZMatrixRMaj. n o false data))))
 
-(defn <-real ^ComplexDense [^RealDense M]
+(defn complexdense<-real ^ComplexDense [^RealDense M]
   (let [A ^RealDense (.M M)
         Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
     (CommonOps_ZDRM/convert A Z)

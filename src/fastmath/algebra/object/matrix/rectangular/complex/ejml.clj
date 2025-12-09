@@ -3,27 +3,22 @@
   "
   (:require
    [clojure.string :as str]
-   [fastmath.default :as default]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
-   [fastmath.protocol.representation.d2 :as d2]
-   [fastmath.protocol.algebra.structure.additive.semigroup :as asg]
-   [fastmath.protocol.algebra.structure.additive.monoid :as am]
-   [fastmath.protocol.algebra.structure.additive.group :as ag]
-   [fastmath.protocol.algebra.structure.space.normed :as ns]
-   [fastmath.protocol.algebra.structure.space.vector :as vs]
-   [fastmath.protocol.algebra.structure.module :as module]
-   [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
-
+   [fastmath.default :as default]
+   [fastmath.protocol.algebra.object.matrix.complex :as cmat]
    [fastmath.protocol.algebra.object.matrix.general :as gmat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
-   [fastmath.protocol.algebra.object.matrix.complex :as cmat])
+   [fastmath.protocol.algebra.structure.additive.group :as ag]
+   [fastmath.protocol.algebra.structure.additive.monoid :as am]
+   [fastmath.protocol.algebra.structure.additive.semigroup :as asg]
+   [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
+   [fastmath.protocol.algebra.structure.module :as module]
+   [fastmath.protocol.algebra.structure.space.normed :as nspace]
+   [fastmath.protocol.representation.d2 :as d2])
   (:import
    (java.lang Math)
-   (org.ejml.data Complex_F64 ComplexPolar_F64 ZMatrixRMaj)
-   (org.ejml.ops ComplexMath_F64)
-   (org.ejml.dense.row CommonOps_ZDRM MatrixFeatures_ZDRM NormOps_ZDRM)
-   (org.ejml.dense.row.factory DecompositionFactory_ZDRM)
-   (org.ejml.interfaces.decomposition CholeskyDecomposition_F64 LUDecomposition_F64)))
+   (org.ejml.data Complex_F64 ZMatrixRMaj)
+   (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM)))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
@@ -142,13 +137,13 @@
       (CommonOps_ZDRM/scale -1.0 0.0 A)
       (ComplexDense. A)))
 
-  ns/NormedSpace
+  nspace/NormedSpace
   (norm [_]
     ;; frobenius matrix norm
     (double (NormOps_ZDRM/normF M)))
 
-  vs/VectorSpace
-  (scale [_ s]
+  module/Module
+  (scale [_ [r i]]
     (let [A (.copy M)]
       (CommonOps_ZDRM/scale (double r) (double i) A)
       (ComplexDense. A)))
@@ -332,19 +327,18 @@
   (^ComplexDense [^long n ^long o ^doubles data]
    (->ComplexDense (ZMatrixRMaj. n o false data))))
 
-(defn <-real ^ComplexDense [^RealDense M]
-  (let [A ^RealDense (.M M)
-        Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
-    (CommonOps_ZDRM/convert A Z)
+(defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
+  (let [Z (ZMatrixRMaj. ^long (.numRows M) ^long (.numCols M))]
+    (CommonOps_ZDRM/convert M Z)
     (->ComplexDense Z)))
 
-(defn complexdense<-rows ^ComplexDense [rows]
+(defn <-rows ^ComplexDense [rows]
   (let [nrows (count rows)
         ncols (count (first rows))
         data  (double-array (apply concat rows))]
     (->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
 
-(defn complexdense<-cols ^ComplexDense [cols]
+(defn <-cols ^ComplexDense [cols]
   (let [^ZMatrixRMaj A (.M (complexdense<-rows cols))
         ^ZMatrixRMaj out (ZMatrixRMaj. (.numCols A) (.numRows A))]
     (CommonOps_ZDRM/transpose A out)
@@ -354,7 +348,11 @@
 (comment (println "test")
          (def A--test (complexdense 2 2 (double-array [1 1 0 0 1 0 0 0])))
          (def B--test (complexdense 2 2 (double-array [1 0 1 0 1 0 0 1])))
-         (-> (la/add A--test B--test)
+
+         (complexdense 3 3)
+         (println A--test)
+         (println B--test)
+         (-> (cmat/add A--test B--test)
              println)
 
          (-> (->ComplexDense (ZMatrixRMaj. 3 3))
