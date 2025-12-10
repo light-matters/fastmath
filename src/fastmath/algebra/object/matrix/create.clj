@@ -27,12 +27,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn identity
   "A square matrix, with unity on the leading diagonal and all other elements zero. "
-  [nrows {:keys [domain]
-          :or {domain domain--default}}]
-  (case domain
-    :real    (sqrmat/realdense    nrows nrows)
-    :complex (sqcmat/complexdense nrows nrows)
-    (throw (ex-info "Unknown domain" {:domain domain}))))
+  ([nrows] (identity nrows {:domain domain--default}))
+  ([nrows {:keys [domain]
+           :or {domain domain--default}}]
+   (case domain
+     :real    (sqrmat/realdense (take nrows (repeat 1)))
+     :complex (sqcmat/complexdense  (interleave (take nrows (repeat 1)) (take nrows (repeat 0))))
+     (throw (ex-info "Unknown domain" {:domain domain})))))
 
 (defn zero
   "A matrix with all elements zeroed, as specified by the number of rows, rows and columns or rows, columns and optional info. - currently domain."

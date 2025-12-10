@@ -145,10 +145,10 @@
           acc))))
 
   (outer [_ other]
-    (let [m (.getNumRows M)
-          n (.getNumRows (.M ^RealDense other))
-          ^doubles ad (.getData M)
-          ^doubles bd (.getData (.M ^RealDense other))
+    (let [m (.getNumRows ^DMatrixRMaj M)
+          n (.getNumRows ^DMatrixRMaj (.M ^RealDense other))
+          ^doubles ad (.getData ^DMatrixRMaj M)
+          ^doubles bd (.getData ^DMatrixRMaj (.M ^RealDense other))
           out (DMatrixRMaj. m n)]
       (dotimes [i m]
         (let [ai (aget ad i)]
@@ -197,9 +197,9 @@
   d2/D2
 ;; ==================================================
   ;; -------- Info --------
-  (shape    [_] [(.numRows M) (.numCols M)])
-  (num-rows [_] (.numRows M))
-  (num-cols [_] (.numCols M))
+  (shape    [_] [^long (.numRows M) ^long (.numCols M)])
+  (num-rows [_] ^long (.numRows M))
+  (num-cols [_] ^long (.numCols M))
 
   ;; -------- Retrieval --------
   (element [_ i j]
@@ -269,7 +269,7 @@
     (->RealDense (DMatrixRMaj. nrows ncols true data))))
 
 (defn <-cols ^RealDense [cols]
-  (let [^DMatrixRMaj A (.M (realdense<-rows cols))
+  (let [^DMatrixRMaj A (.M (<-rows cols))
         ^DMatrixRMaj out (DMatrixRMaj. (.numCols A) (.numRows A))]
     (CommonOps_DDRM/transpose A out)
 

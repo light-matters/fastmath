@@ -339,7 +339,7 @@
     (->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
 
 (defn <-cols ^ComplexDense [cols]
-  (let [^ZMatrixRMaj A (.M (complexdense<-rows cols))
+  (let [^ZMatrixRMaj A (.M (<-rows cols))
         ^ZMatrixRMaj out (ZMatrixRMaj. (.numCols A) (.numRows A))]
     (CommonOps_ZDRM/transpose A out)
 
