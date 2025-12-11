@@ -20,7 +20,7 @@
 
 ;; elements
   ([^long n ^long o ^doubles data]
-   (complexdense/->ComplexDense (ZMatrixRMaj. n o false data))))
+   (complexdense/->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
 
 (defn identity [^long n]
   (complexdense/->ComplexDense (CommonOps_ZDRM/identity n)))

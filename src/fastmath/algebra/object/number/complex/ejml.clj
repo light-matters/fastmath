@@ -115,8 +115,13 @@
       (ComplexMath_F64/sqrt z ^Complex_F64 out)
       (ComplexNumber. out)))
 
+;; ==================================================
   clojure.lang.Seqable
+;; ==================================================
   (seq [_] (list (.-real z) (.-imaginary z)))
+;; ==================================================
+  clojure.lang.Sequential
+;; ==================================================
 
   Object
   (toString [_]

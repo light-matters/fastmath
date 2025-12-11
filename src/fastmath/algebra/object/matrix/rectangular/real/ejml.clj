@@ -16,7 +16,7 @@
   (:import
    (java.lang Math)
    (org.ejml.data DMatrixRMaj)
-   (org.ejml.dense.row CommonOps_DDRM NormOps_DDRM)))
+   (org.ejml.dense.row CommonOps_DDRM NormOps_DDRM MatrixFeatures_DDRM)))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
@@ -237,6 +237,8 @@
 ;; ==================================================
   Object
 ;; ==================================================
+  (equals [_ B]
+    (MatrixFeatures_DDRM/isEquals M (.-M ^RealDense B) default/tolerance))
   (toString [_]
     (print! M)))
 
@@ -260,7 +262,7 @@
 
 ;; elements
   (^RealDense [^long n ^long o ^doubles data]
-   (->RealDense (DMatrixRMaj. n o false data))))
+   (->RealDense (DMatrixRMaj. n o true (double-array (flatten data))))))
 
 (defn <-rows ^RealDense [rows]
   (let [nrows (count rows)

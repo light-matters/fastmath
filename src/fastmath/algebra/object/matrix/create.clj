@@ -19,8 +19,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def domains (set #{:real :complex}))
-(def domain--default :complex)
-;; TODO: Change this ^^^ when real matrices are working properly again.
+(def domain--default :real)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;              Constructors             ;
@@ -43,6 +42,7 @@
    (zero nrows ncols {:domain domain--default}))
   ([^:long nrows ^:long ncols {:keys [domain] :or {domain domain--default}}]
    (if (= nrows ncols)
+     ;; TODO: Implement proper square and fixed-size matrices
      (case domain
        :real    (sqrmat/realdense    nrows ncols)
        :complex (sqcmat/complexdense nrows ncols)

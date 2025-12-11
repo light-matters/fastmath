@@ -19,7 +19,8 @@
 
 ;; elements
   ([^long n ^long o ^doubles data]
-   (realdense/->RealDense (DMatrixRMaj. n o false data))))
+   (println "got here")
+   (realdense/->RealDense (DMatrixRMaj. n o true (double-array data)))))
 
 (defn identity [^long n]
   (realdense/->RealDense (CommonOps_DDRM/identity n)))

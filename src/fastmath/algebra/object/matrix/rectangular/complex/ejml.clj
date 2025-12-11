@@ -18,7 +18,7 @@
   (:import
    (java.lang Math)
    (org.ejml.data Complex_F64 ZMatrixRMaj)
-   (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM)))
+   (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM MatrixFeatures_ZDRM)))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
@@ -302,6 +302,10 @@
 ;; ==================================================
   Object
 ;; ==================================================
+
+  (equals [_ B]
+    (MatrixFeatures_ZDRM/isEquals M (.-M B) default/tolerance))
+
   (toString [_]
     (print! M)))
 
@@ -325,11 +329,11 @@
 
 ;; elements
   (^ComplexDense [^long n ^long o ^doubles data]
-   (->ComplexDense (ZMatrixRMaj. n o false data))))
+   (->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
 
-(defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
-  (let [Z (ZMatrixRMaj. ^long (.numRows M) ^long (.numCols M))]
-    (CommonOps_ZDRM/convert M Z)
+(defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense A]
+  (let [Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
+    (CommonOps_ZDRM/convert A Z)
     (->ComplexDense Z)))
 
 (defn <-rows ^ComplexDense [rows]
