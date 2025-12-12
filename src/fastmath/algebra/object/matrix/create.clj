@@ -94,6 +94,7 @@
   "From 1-D collection, creates a matrix with zero-values apart from on the leading diagonal. Chooses domain based on the first element. Don't mix real and complex numbers!"
   [coll]
   (let [domain (if-not (C/? (first coll)) :real :complex)]
+    ;; TODO: Use square matrix types
     (case domain
       :real    (rmat/realdense     coll)
       :complex (cmat/complexdense  coll)

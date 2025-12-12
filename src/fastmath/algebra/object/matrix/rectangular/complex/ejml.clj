@@ -324,30 +324,32 @@
 
   ;; diagonal
   (^ComplexDense [^doubles data]
-   (-> (CommonOps_ZDRM/diag (double-array data))
+   (-> (CommonOps_ZDRM/diag (double-array (flatten data)))
        ->ComplexDense))
 
 ;; elements
   (^ComplexDense [^long n ^long o ^doubles data]
    (->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
 
-(defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense A]
-  (let [Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
+(defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
+  (let [A (.-M M)
+        Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
     (CommonOps_ZDRM/convert A Z)
     (->ComplexDense Z)))
 
 (defn <-rows ^ComplexDense [rows]
   (let [nrows (count rows)
         ncols (count (first rows))
-        data  (double-array (apply concat rows))]
+
+        test (println "got to " (flatten rows))
+        data  (double-array (flatten rows))]
     (->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
 
 (defn <-cols ^ComplexDense [cols]
-  (let [^ZMatrixRMaj A (.M (<-rows cols))
-        ^ZMatrixRMaj out (ZMatrixRMaj. (.numCols A) (.numRows A))]
-    (CommonOps_ZDRM/transpose A out)
-
-    (->ComplexDense out)))
+  (let [ncols (count cols)
+        nrows (count (first cols))
+        data  (double-array (flatten cols))]
+    (->ComplexDense (ZMatrixRMaj. nrows ncols false data))))
 
 (comment (println "test")
          (def A--test (complexdense 2 2 (double-array [1 1 0 0 1 0 0 0])))

@@ -25,15 +25,16 @@
 (defn identity [^long n]
   (complexdense/->ComplexDense (CommonOps_ZDRM/identity n)))
 
-(defn <-real  [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
-  (let [Z (ZMatrixRMaj. ^long (.numRows M) ^long (.numCols M))]
+(defn <-real  [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense A]
+  (let [M (.-M A)
+        Z (ZMatrixRMaj. ^long (.numRows M) ^long (.numCols M))]
     (CommonOps_ZDRM/convert M Z)
     (complexdense/->ComplexDense Z)))
 
 (defn <-rows  [rows]
   (let [nrows (count rows)
         ncols (count (first rows))
-        data  (double-array (apply concat rows))]
+        data  (double-array (flatten rows))]
     (complexdense/->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
 
 (defn <-cols  [cols]
