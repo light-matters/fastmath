@@ -52,10 +52,19 @@
        :complex (cmat/complexdense nrows ncols)
        (throw (ex-info "Unknown domain" {:domain domain}))))))
 
+(defn- complex-elements?
+  "Check for the different ways that complex elements could be represented."
+  [[nrows ncols] coll]
+  (let [coll0 (first coll)]
+    (or (C/? coll0)
+        (and (coll? coll0) (= (count coll0) 2))
+        (= (count coll) (* 2 nrows ncols)))))
+
 (defn <-coll
   "From 1-D collection. Chooses domain based on the first element. Don't mix real and complex numbers!"
   [nrows ncols coll]
-  (let [domain (if-not (C/? (first coll)) :real :complex)]
+  (let [domain (if-not (complex-elements? [nrows ncols] coll)
+                 :real :complex)]
     (if (= nrows ncols)
       (case domain
         :real    (sqrmat/realdense    nrows ncols coll)

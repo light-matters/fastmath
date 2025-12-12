@@ -128,8 +128,7 @@
       (ComplexDense. out)))
 
   am/AdditiveMonoid
-  (zero [_] (.zero (ZMatrixRMaj. (.numRows M) (.numCols M))))
-  ;; TODO: Check if `.zero` is necessary
+  (zero [_] (ComplexDense. (ZMatrixRMaj. (.numRows M) (.numCols M))))
 
   ag/AdditiveGroup
   (negate [_]
@@ -143,8 +142,9 @@
     (double (NormOps_ZDRM/normF M)))
 
   module/Module
-  (scale [_ [r i]]
-    (let [A (.copy M)]
+  (scale [_ z]
+    (let [A (.copy M)
+          [r i] (if (coll? z) z [z 0.0])]
       (CommonOps_ZDRM/scale (double r) (double i) A)
       (ComplexDense. A)))
 
@@ -363,3 +363,4 @@
 
          (-> (->ComplexDense (ZMatrixRMaj. 3 3))
              println))
+
