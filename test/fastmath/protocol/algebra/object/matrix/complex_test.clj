@@ -33,7 +33,8 @@
       (t/are [q a] (= q a)
         (sut/real? mat2x2) false
         (sut/real? mat2x2--real) true
+        (sut/real? (mcreate/<-coll 2 2 [45 34  -45  56])) true
+        (sut/? (mcreate/<-coll 2 2 [45 34  -45  56])) false
         (sut/? mat2x2) true))))
-
 
 

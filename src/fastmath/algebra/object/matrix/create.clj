@@ -115,7 +115,10 @@
 (defn <-real
   "A complex matrix from an existing, real matrix."
   [M]
-  (let [[nrows ncols] (d2/shape M)]
-    (if (= nrows ncols)
-      (sqcmat/<-real M)
-      (cmat/<-real M))))
+  (if-not (instance? fastmath.algebra.object.matrix.rectangular.complex.ejml.ComplexDense M)
+    (let [[nrows ncols] (d2/shape M)]
+      (if (= nrows ncols)
+        (sqcmat/<-real M)
+        (cmat/<-real M)))
+    M))
+

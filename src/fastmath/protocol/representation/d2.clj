@@ -1,21 +1,18 @@
 (ns fastmath.protocol.representation.d2
-  "Access and manipulation methods for '2D' things.")
+  "Access and manipulation methods for '2D', e.g. table-like, things.")
 
 (defprotocol D2
 ;; Information
-  (shape [m])
-  (num-rows [m])
-  (num-cols [m])
+  (shape [d2])
+  (nrows [d2])
+  (ncols [d2])
 
 ;; Retrieval
   (element [m row col])
-
   (column [m id])
   (row [m id])
-  (columns [m])
-  (rows [m])
-
-  (diagonal [m])
+  (columns [d2])
+  (rows [d2])
 
   ;; TODO:
   ;; - below would be useful
@@ -23,6 +20,9 @@
 
 ;; Transformation
   ;; Assuming that `clojure.lang.Seqable` is implemented
-  ;; (seq<- [m])
+  ;; (seq<- [d2])
   (array<- ;; "Returns a 2D-array"
-    [m]))
+    [d2])
+  (map [d2 f])
+  ;; WARNING: the first argument of`map--m` is not the same as `core`. This is due to a limitation of protocols. 
+  )

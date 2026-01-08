@@ -210,6 +210,13 @@ protocol.matrix
         complex
         rational
         integer
+*** Representation
+Row, column order should probably be specified somewhere.
+
+General pattern should be made explicit, i.e.
+
+general-specialised-maths-representation-implementation...
+
 * Notes
 Fastmath uses a mixture of apache and hard-coded clojure?
 ** Resources

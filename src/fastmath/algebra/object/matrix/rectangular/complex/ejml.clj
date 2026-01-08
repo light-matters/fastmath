@@ -161,9 +161,9 @@
     "Complex Frobenius inner product <A,B> = sum(conj(A_ij) * B_ij)."
    ;; TODO: Return complex number
     (let [B (.M ^ComplexDense other)
-          ^doubles da M
+          ^doubles da (.getData M)
           ^doubles db (.getData B)
-          n (.getLength da)]
+          n (count (flatten da))]
       (loop [i 0
              rsum 0.0
              isum 0.0]
@@ -203,7 +203,7 @@
                         (+ (* ar bi) (* ai br)))))))))
       out))
 
-  (map--m [_ f]
+  (map [_ f]
     ;; TODO: Prevent function from multiple calls to set
     ;; - Work on (.data A) directly
     (let [^ZMatrixRMaj A (.copy M)]
@@ -243,8 +243,8 @@
 ;; ==================================================
   ;; -------- Info --------
   (shape    [_] [(.numRows M) (.numCols M)])
-  (num-rows [_] (.numRows M))
-  (num-cols [_] (.numCols M))
+  (nrows [_] (.numRows M))
+  (ncols [_] (.numCols M))
 
   ;; -------- Retrieval --------
   (element [_ i j]
@@ -265,11 +265,11 @@
             (ComplexDense. (extract M [ir (+ ir 1)] [0 (.numCols M)])))
           (range (.numRows M))))
 
-  (diagonal [_]
-    (let [n (min (.numRows M) (.numCols M))
-          out (ZMatrixRMaj. n 1)]
-      (CommonOps_ZDRM/extractDiag M out)
-      (ComplexDense. out)))
+  ;; (diagonal [_]
+  ;;   (let [n (min (.numRows M) (.numCols M))
+  ;;         out (ZMatrixRMaj. n 1)]
+  ;;     (CommonOps_ZDRM/extractDiag M out)
+  ;;     (ComplexDense. out)))
 
   (array<- [_]
     (let [r (.numRows M) c (.numCols M)
@@ -332,7 +332,7 @@
    (->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
 
 (defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
-  (let [A (.-M M)
+  (let [A    (.-M  M)
         Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
     (CommonOps_ZDRM/convert A Z)
     (->ComplexDense Z)))

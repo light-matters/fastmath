@@ -156,7 +156,7 @@
             (.set out i j (* ai (aget bd j))))))
       (RealDense. out)))
 
-  (map--m [_ f]
+  (map [_ f]
     ;; TODO: Prevent function from multiple calls to set
     ;; - Work on (.data A) directly
     (let [^DMatrixRMaj A (.copy M)]
@@ -198,8 +198,8 @@
 ;; ==================================================
   ;; -------- Info --------
   (shape    [_] [^long (.numRows M) ^long (.numCols M)])
-  (num-rows [_] ^long (.numRows M))
-  (num-cols [_] ^long (.numCols M))
+  (nrows [_] ^long (.numRows M))
+  (ncols [_] ^long (.numCols M))
 
   ;; -------- Retrieval --------
   (element [_ i j]
@@ -220,11 +220,11 @@
             (RealDense. (extract M [ir (+ ir 1)] [0 (.numCols M)])))
           (range (.numRows M))))
 
-  (diagonal [_]
-    (let [n (min (.numRows M) (.numCols M))
-          out (DMatrixRMaj. n 1)]
-      (CommonOps_DDRM/extractDiag M out)
-      (RealDense. out)))
+  ;; (diagonal [_]
+  ;;   (let [n (min (.numRows M) (.numCols M))
+  ;;         out (DMatrixRMaj. n 1)]
+  ;;     (CommonOps_DDRM/extractDiag M out)
+  ;;     (RealDense. out)))
 
   (array<- [_]
     (let [r (.numRows M) c (.numCols M)

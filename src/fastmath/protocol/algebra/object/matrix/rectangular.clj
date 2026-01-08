@@ -15,6 +15,4 @@
   (and
    ;; maths
    (vspace/? x)
-   (nspace/? x)
-   ;;
-   (satisfies? RectangularMatrix x)))
+   (nspace/? x)))

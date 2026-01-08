@@ -4,18 +4,23 @@
   (:require
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.protocol.algebra.structure.space.vector :as vspace]
-   [fastmath.protocol.algebra.structure.space.vector :as nspace]))
+   [fastmath.protocol.algebra.structure.space.normed :as nspace]))
+
+;; TODO: Add docstrings
 
 (defprotocol GeneralMatrix
   (add--s [A s])
   (inner [A B])
   (outer [A B])
-  (map--m [A f])
-  ;; TODO: Should `map--m` be part of the D2 protocol?
+
   (multiply [A B])
+  ;; TODO: Where to put matrix multiplies? Doesn't always work (dimensions).
+  ;; TODO: Should these be replaced with mathematical symbols?
   (multiply--e [A B])
   (multiply--v [A v])
+
   (subtract [A B])
+  ;; NOTE: Available for efficiency reasons.
   (transpose [A])
 
   (square? [A])
@@ -23,8 +28,10 @@
   )
 (defn ? [x]
   (and
-   ;; maths
-   (vspace/? x)
-   (nspace/? x)
    ;;
    (satisfies? rmat/RectangularMatrix x)))
+
+(comment (-> [(into [] (range 10)) (into [] (range 10))]
+             flatten
+             double-array
+             count))
