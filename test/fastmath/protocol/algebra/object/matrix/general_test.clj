@@ -1,5 +1,5 @@
 (ns fastmath.protocol.algebra.object.matrix.general-test
-  (:require [fastmath.protocol.algebra.object.matrix.general :as sut]
+  (:require [fastmath.protocol.algebra.object.matrix.extra :as sut]
             [clojure.test :as t]
             [fastmath.algebra.object.matrix.create :as mcreate]))
 

@@ -6,7 +6,7 @@
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.default :as default]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
-   [fastmath.protocol.algebra.object.matrix.friendly :as gmat]
+   [fastmath.protocol.algebra.object.matrix.extra :as gmat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.protocol.algebra.structure.additive.group :as ag]
    [fastmath.protocol.algebra.structure.additive.monoid :as am]

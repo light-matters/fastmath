@@ -1,4 +1,4 @@
-(ns fastmath.protocol.algebra.object.matrix.friendly
+(ns fastmath.protocol.algebra.object.matrix.extra
   "Miscellaneous functions that we expect any useful matrix implementation to have, but which are not mathematically necessary or only partally defined, e.g. only work on certain shapes or are only implemented for efficiency reasons.
   "
   (:require
