@@ -22,7 +22,7 @@ Inasmuch as Lewis Carrol may have creatively objected, complex numbers are now a
 
 Clojure's support for these numbers however, remains sporadic while it's biggest competitor, the well-known comedy snake - and scripting language - (https://www.geeksforgeeks.org/python/history-of-python/), treats complex numbers as first-class citizens.
 
-With this funding I would like to address the issue somewhat, particularly with regard to the implementation of complex matrices, but concerning a consistent complex API more generally.
+With this funding I would like to address the issue somewhat, particularly with regard to the implementation of complex matrices, but concerning *a consistent complex API* more generally.
 
 Surveying the current field, the 'emmy' library seems to be the most developed option in this area, but it is focussed on symbolic manipulation. When dealing with large memory simulations, it is unlikely to be competitive. `core.matrix.complex` seems to be the numerical choice but its last commit was 5 years ago, it is a thin wrapper over apache commons and not all matrix protocols seem to have been extended to complex numbers. More confusingly, when dealing with numerical matrices more generally, the go-to choices are fastmath   and neanderthal - neither of which have implemented complex matrices.
 
@@ -106,25 +106,21 @@ i.e. If you implement this, your operation works for all inputs of your type?
 * Transform support
 - fft4j
 * Checklist
-** initial performance tests 
-*** TODO fastmath (non complex)
-vs Python
-*** DONE apache commons vs ejml
-ejml without much competition
-*** TODO run java matrix benchmark test
-main considerations: ejml vs ojalgo
-*** TODO [#A] Make a prioritised list of goals!
-
-** communication
-*** post on reddit etc. for ideas
 ** API creation
 *** TODO fundamental matrix ops
 Use fastmath tests
-**** DONE ejml
-**** TODO ojalgo?
+**** add 
+**** subtract
+**** add scalar
+**** scale
+**** norm
+**** inner product
+**** outer product
+**** multiply
+**** multiply elements
 
-*** LU decomposition and solver
 *** easy interoperability?
+*** LU decomposition and solver
 *** fixed size matrices (efficiency)
 ** Integration
 *** clay
@@ -133,11 +129,25 @@ interoperability
 *** Ince-Gaussian
 *** Fourier-analysis
 *** Wolframite
-** Performance tests
+** Performance comparison
+(at least one of)
 *** Python
-*** Emmy
 *** Wolframite
-** Publication
+** clay doc
+
+** postponed
+*** initial performance tests 
+**** TODO fastmath (non complex)
+vs Python
+**** TODO run java matrix benchmark test
+main considerations: ejml vs ojalgo
+
+*** communication
+**** post on reddit etc. for ideas
+*** Implementation
+**** TODO ojalgo?
+
+
 * Comments on current API
 ** api version
 version the api?
