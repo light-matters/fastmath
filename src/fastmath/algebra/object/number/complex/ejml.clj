@@ -143,22 +143,6 @@
 (def ^{:doc "z=0+0i"} ZERO (ComplexNumber. zeroF64))
 (def ^{:doc "z=pi+0i"} PI (ComplexNumber. (Complex_F64. math/PI 0.0)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                 Constructor                                 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TODO: Should constructors be moved to some kind of API ns?
-
-(defn complex
-  "Creates a complex number represented as an ejml `ComplexNumber`.
-  Takes optional real and imaginary parts."
-
-  ([^double x ^double y] (ComplexNumber. (Complex_F64. x y)))
-  ([^double x] (ComplexNumber. (Complex_F64. x 0.0)))
-  ([] ZERO))
-
-(def i "Same as `complex` above, but a 'friendlier' syntax."
-  complex)
-
 (comment
   (seq (i 1.0 1.0))
 

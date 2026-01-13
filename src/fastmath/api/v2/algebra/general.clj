@@ -2,13 +2,20 @@
   "WARNING: experimental & WIP!
 
   Towards a unified, flexible, entrypoint for linear algebra across different types, i.e. for those who don't want to have to think about types.
+
   "
+  ;; Currently implemented using EJML. 
+  ;; TODO: Check for fixed, square etc. types as well.
+  ;; - is it necessary to distinguish vectors from matrices?
   (:refer-clojure :exclude [type])
   (:require
-   [fastmath.algebra.object.matrix.rectangular.complex.ejml :as cM]))
+   [fastmath.protocol.algebra.object.number.complex cn]
+   [fastmath.protocol.algebra.object.matrix.rectangular.complex :as cm]
+   [fastmath.algebra.object.number.complex.create :as createcn]
+   [fastmath.algebra.object.matrix.create :as createm]))
 
 ;; Type predicates
-(defn complex-number? [x])
+(defn complex-number? [x] (cn/? x))
 (defn scalar? [x]
   (or number?
       complex-number?))
@@ -66,9 +73,9 @@
   "Increases the set type of the element (if possible), e.g. a real number becomes a complex number or a real matrix becomes a complex matrix."
   [x]
   (case (type x)
-    :scalar--real (cmat/i (double x))
+    :scalar--real (createcn/<-real (double x))
     :scalar--complex x
-    :matrix--real (cmat/<-real x)
+    :matrix--real (createm/<-real x)
     :matrix--complex x
 
     (throw (ex-info "No promotion rule for " {:value x}))))
