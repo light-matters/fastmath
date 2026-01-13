@@ -3,11 +3,8 @@
    [fastmath.protocol.algebra.structure.coordinate.complex :as complex-coordinate]
    [fastmath.protocol.algebra.structure.coordinate.polar :as polar-coordinate]
    [fastmath.protocol.algebra.structure.field :as field]
-   [fastmath.protocol.algebra.structure.space.normed :as normed-space]))
-
-;; TODO: Consider whether or not it would be better to use magnitude,angle as the default format. This is more efficient for multiplication, but less efficient for addition.
-;;
-;;Should we have different implementations to this effect?
+   [fastmath.protocol.algebra.structure.space.normed :as normed-space]
+   [fastmath.algebra.object.number.complex.create :as create]))
 
 (defprotocol ComplexNumber
   "A placeholder to indicate that a number has implemented all of the methods necessary to function as a `fastmath` complex number. This can be ensured by calling `?`.
@@ -36,5 +33,14 @@ Other convenience methods are listed below."
    (polar-coordinate/?  x)
    ;; convenience
    (instance? clojure.lang.Seqable x)
-   ;;
-   (satisfies? ComplexNumber x)))
+   ;; (satisfies? ComplexNumber x)
+   ))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;             Constructors            ;
+                                        ;             
+;; "Added here for user convenience, to account for protocols' general lack of constructors." 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def create create/create)
+(def <-real create/<-real)
+(def i create/i)

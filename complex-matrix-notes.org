@@ -103,6 +103,7 @@ i.e. If you implement this, your operation works for all inputs of your type?
  [x y] [x y]]
 *** I guess all of the operations and decomposition etc. would have to be manually implemented...
 ** Do we need a separate matrix and vector namespace?
+** Where should constructors go for key protocols? 
 * Transform support
 - fft4j
 * Checklist

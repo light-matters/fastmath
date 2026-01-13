@@ -10,8 +10,8 @@
    [fastmath.protocol.representation.d2 :as d2]
    [fastmath.protocol.algebra.object.number.complex :as C]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as rmat]
-   [fastmath.algebra.object.matrix.square.real.ejml :as sqrmat]
    [fastmath.algebra.object.matrix.rectangular.complex.ejml :as cmat]
+   [fastmath.algebra.object.matrix.square.real.ejml :as sqrmat]
    [fastmath.algebra.object.matrix.square.complex.ejml :as sqcmat]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

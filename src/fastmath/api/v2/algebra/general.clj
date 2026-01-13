@@ -9,18 +9,29 @@
   ;; - is it necessary to distinguish vectors from matrices?
   (:refer-clojure :exclude [type])
   (:require
-   [fastmath.protocol.algebra.object.number.complex cn]
-   [fastmath.protocol.algebra.object.matrix.rectangular.complex :as cm]
-   [fastmath.algebra.object.number.complex.create :as createcn]
-   [fastmath.algebra.object.matrix.create :as createm]))
+   [fastmath.protocol.representation.d2 :as d2]
+   [fastmath.protocol.algebra.object.number.complex :as C]
+   [fastmath.protocol.algebra.object.matrix.rectangular.complex :as cmat]
+   [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
+   [fastmath.algebra.object.matrix.create :as createm]
+   [fastmath.interpolation.linear :as linear]))
+
+(defn linear-shape
+  "Boolean or nil."
+  [coll]
+  (some #{1} (d2/shape coll)))
 
 ;; Type predicates
-(defn complex-number? [x] (cn/? x))
 (defn scalar? [x]
   (or number?
-      complex-number?))
-(defn vector? [x])
-(defn matrix? [x])
+      C/?))
+(defn matrix? [x]
+  ((some-fn cmat/? rmat/?) x))
+(defn vector? [x]
+  ((every-pred matrix?
+               linear-shape)
+   x))
+
 (defn real? [x])
 
 (derive ::matrix ::type)
@@ -46,15 +57,17 @@
 (defn- type
   "Classify an argument so the arithmetic multimethods can dispatch on it."
   [x]
-  (cond
-    (matrix? x) (if (cm/real? x) ;; TODO: Change this to check for type!
-                  ::matrix--real
-                  ::matrix--complex)
-    (vector? x) (if (cm/real? x);; TODO: Change this to check for type!
-                  ::vector--real
-                  ::vector--complex)
-    (number? x) ::scalar--real
-    (complex-number? x) ::scalar--complex))
+  (if (rmat/? x)
+    (if (linear-shape x)
+      (if (cmat/? x)
+        ::vector--complex
+        ::vector--real)
+      (if (cmat/? x)
+        ::matrix--complex
+        ::matrix--real))
+    (cond
+      (number? x) ::scalar--real
+      (C/? x) ::scalar--complex)))
 
 (defn- rank--domain [x]
   (cond
@@ -104,11 +117,11 @@
       [(type pa) (type pb)])))
 
 (defmethod add* [::matrix ::matrix] [a b]
-  (cm/add a b))
+  (cmat/add a b))
 (defmethod add* [::matrix ::scalar] [a s]
-  (cm/add--s a s))
+  (cmat/add--s a s))
 (defmethod add* [::scalar ::matrix] [s a]
-  (cm/add--s a s))
+  (cmat/add--s a s))
 (defmethod add* [::scalar ::scalar] [a b]
   (clojure.core/+ a b))
 
@@ -131,12 +144,12 @@
       [(type pa) (type pb)])))
 
 (defmethod subtract* [::matrix ::matrix] [a b]
-  (cm/sub a b))
+  (cmat/sub a b))
 
 (defmethod subtract* [::matrix ::scalar] [a b]
-  (cm/add--s a b))
+  (cmat/add--s a b))
 ;; (defmethod subtract* [::scalar ::matrix] [a b]
-;;   (cm/add--s a b))
+;;   (cmat/add--s a b))
 ;;   TODO: Does this ^ make sense?
 ;;   
 (defmethod subtract* [::scalar ::scalar] [a b]

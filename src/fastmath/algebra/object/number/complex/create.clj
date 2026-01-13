@@ -1,15 +1,12 @@
 (ns fastmath.algebra.object.number.complex.create
-  "Currently implemented using EJML."
+  "
+  Presents an API for complex number creation, for the sake of implementation-independent reference. Specifically, putting it here allows a referent to be added to the complex number protocol.
+
+  This implementation currently uses **EJML**, but can/needs to be updated when the implementation changes.
+  "
   (:require [fastmath.algebra.object.number.complex.ejml :as cn])
   (:import
-   (java.lang Math)
-   (org.ejml.data Complex_F64 ComplexPolar_F64)
-   (org.ejml.ops ComplexMath_F64)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                 Constructor                                 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TODO: Decide whether it's worth keeping 'contstructors' in a separate namespace. 
+   (org.ejml.data Complex_F64)))
 
 (defn create
   "Creates a complex number represented as an ejml `ComplexNumber`.

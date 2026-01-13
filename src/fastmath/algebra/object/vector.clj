@@ -1,6 +1,6 @@
 (ns fastmath.algebra.object.vector
   (:require
-   [fastmath.protocol.algebra.object.matrix.extra]
+   [fastmath.protocol.algebra.object.matrix.extra :as extra]
    [fastmath.protocol.representation.d2 :as d2]
    [fastmath.algebra.object.matrix.create :as M]))
 
