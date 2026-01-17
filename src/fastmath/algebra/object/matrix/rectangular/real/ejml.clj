@@ -5,12 +5,13 @@
    [clojure.string :as str]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.default :as default]
-   [fastmath.protocol.algebra.object.matrix.extra :as gmat]
+   [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.protocol.algebra.structure.additive.group :as ag]
    [fastmath.protocol.algebra.structure.additive.monoid :as am]
    [fastmath.protocol.algebra.structure.additive.semigroup :as asg]
    [fastmath.protocol.algebra.structure.module :as module]
+   [fastmath.protocol.algebra.structure.space.vector :as vspace]
    [fastmath.protocol.algebra.structure.space.normed :as nspace]
    [fastmath.protocol.representation.d2 :as d2])
   (:import
@@ -113,19 +114,19 @@
       (CommonOps_DDRM/scale -1.0 0.0 A)
       (RealDense. A)))
 
+  module/Module
+  (scale [_ scalar]
+    (let [A (.copy M)]
+      (CommonOps_DDRM/scale scalar M A)
+      (RealDense. A)))
+
   nspace/NormedSpace
   (norm [_]
     ;; frobenius matrix norm
     (double (NormOps_DDRM/normF M)))
 
-  module/Module
-  (scale [_ [r i]]
-    (let [A (.copy M)]
-      (CommonOps_DDRM/scale (double r) (double i) A)
-      (RealDense. A)))
-
 ;; ==================================================
-  gmat/GeneralMatrix
+  emat/MatrixExtra
 ;; ==================================================
   (add--s [_ s]
     (let [A (.copy M) d (.data A) s (double s)]
@@ -156,14 +157,14 @@
             (.set out i j (* ai (aget bd j))))))
       (RealDense. out)))
 
-  (map [_ f]
-    ;; TODO: Prevent function from multiple calls to set
-    ;; - Work on (.data A) directly
-    (let [^DMatrixRMaj A (.copy M)]
-      (dotimes [i (.numRows A)]
-        (dotimes [j (.numCols A)]
-          (.set A i j (f (.get A i j)))))
-      (RealDense. A)))
+;; (map [_ f]
+  ;;   ;; TODO: Prevent function from multiple calls to set
+  ;;   ;; - Work on (.data A) directly
+  ;;   (let [^DMatrixRMaj A (.copy M)]
+  ;;     (dotimes [i (.numRows A)]
+  ;;       (dotimes [j (.numCols A)]
+  ;;         (.set A i j (f (.get A i j)))))
+  ;;     (RealDense. A)))
   (multiply [_ other]
     (let [^DMatrixRMaj B (.M ^RealDense other)
           out (DMatrixRMaj. (.numRows M) (.numCols B))]

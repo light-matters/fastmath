@@ -12,8 +12,8 @@
   "Creates a complex number represented as an ejml `ComplexNumber`.
   Takes optional real and imaginary parts."
 
-  ([^double x ^double y] (cn/ComplexNumber. (Complex_F64. x y)))
-  ([^double x] (cn/ComplexNumber. (Complex_F64. x 0.0)))
+  ([^double x ^double y] (cn/->ComplexNumber (Complex_F64. x y)))
+  ([^double x] (cn/->ComplexNumber (Complex_F64. x 0.0)))
   ([] cn/ZERO))
 
 (defn <-real [^double x] (create x))

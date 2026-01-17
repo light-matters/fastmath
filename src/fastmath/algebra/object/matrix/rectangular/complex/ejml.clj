@@ -6,7 +6,7 @@
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.default :as default]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
-   [fastmath.protocol.algebra.object.matrix.extra :as gmat]
+   [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.protocol.algebra.structure.additive.group :as ag]
    [fastmath.protocol.algebra.structure.additive.monoid :as am]
@@ -149,7 +149,7 @@
       (ComplexDense. A)))
 
 ;; ==================================================
-  gmat/GeneralMatrix
+  emat/MatrixExtra
 ;; ==================================================
   (add--s [_ s]
     (let [A (.copy M) d (.data A) s (double s)]
@@ -187,21 +187,23 @@
           out    (ZMatrixRMaj. (* a-rows b-rows) (* a-cols b-cols))]
       (dotimes [i a-rows]
         (dotimes [j a-cols]
-          (let [^org.ejml.data.Complex_F64 aij (.get M i j)
-                ar (.real aij)
-                ai (.imaginary aij)]
+          (let [cnum1 (Complex_F64.)
+                ^org.ejml.data.Complex_F64 aij (.get M i j cnum1)
+                ar (.-real cnum1)
+                ai (.-imaginary cnum1)]
             (dotimes [p b-rows]
               (dotimes [q b-cols]
-                (let [^org.ejml.data.Complex_F64 bij (.get B p q)
-                      br (.real bij)
-                      bi (.imaginary bij)]
+                (let [cnum2 (Complex_F64.)
+                      ^org.ejml.data.Complex_F64 bij (.get B p q cnum2)
+                      br (.-real cnum2)
+                      bi (.-imaginary cnum2)]
                 ;; (ar + i ai) * (br + i bi)
                   (.set out
                         (+ (* i b-rows) p)
                         (+ (* j b-cols) q)
                         (- (* ar br) (* ai bi))
                         (+ (* ar bi) (* ai br)))))))))
-      out))
+      (->ComplexDense out)))
 
   (map [_ f]
     ;; TODO: Prevent function from multiple calls to set

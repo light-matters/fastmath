@@ -3,8 +3,7 @@
    [fastmath.protocol.algebra.structure.coordinate.complex :as complex-coordinate]
    [fastmath.protocol.algebra.structure.coordinate.polar :as polar-coordinate]
    [fastmath.protocol.algebra.structure.field :as field]
-   [fastmath.protocol.algebra.structure.space.normed :as normed-space]
-   [fastmath.algebra.object.number.complex.create :as create]))
+   [fastmath.protocol.algebra.structure.space.normed :as normed-space]))
 
 (defprotocol ComplexNumber
   "A placeholder to indicate that a number has implemented all of the methods necessary to function as a `fastmath` complex number. This can be ensured by calling `?`.
@@ -35,12 +34,3 @@ Other convenience methods are listed below."
    (instance? clojure.lang.Seqable x)
    ;; (satisfies? ComplexNumber x)
    ))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                        ;             Constructors            ;
-                                        ;             
-;; "Added here for user convenience, to account for protocols' general lack of constructors." 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def create create/create)
-(def <-real create/<-real)
-(def i create/i)

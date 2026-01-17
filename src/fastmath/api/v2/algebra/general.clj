@@ -11,15 +11,17 @@
   (:require
    [fastmath.protocol.representation.d2 :as d2]
    [fastmath.protocol.algebra.object.number.complex :as C]
-   [fastmath.protocol.algebra.object.matrix.rectangular.complex :as cmat]
+   [fastmath.algebra.object.number.complex.create :as cc]
+   [fastmath.protocol.algebra.object.matrix.complex :as cmat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
-   [fastmath.algebra.object.matrix.create :as createm]
-   [fastmath.interpolation.linear :as linear]))
+   [fastmath.algebra.object.matrix.create :as mat]))
 
-(defn linear-shape
+(defn linear-shape?
   "Boolean or nil."
   [coll]
-  (some #{1} (d2/shape coll)))
+  (if-not (some #{1} (d2/shape coll))
+    false
+    true))
 
 ;; Type predicates
 (defn scalar? [x]
@@ -29,7 +31,7 @@
   ((some-fn cmat/? rmat/?) x))
 (defn vector? [x]
   ((every-pred matrix?
-               linear-shape)
+               linear-shape?)
    x))
 
 (defn real? [x])
@@ -58,7 +60,7 @@
   "Classify an argument so the arithmetic multimethods can dispatch on it."
   [x]
   (if (rmat/? x)
-    (if (linear-shape x)
+    (if (linear-shape? x)
       (if (cmat/? x)
         ::vector--complex
         ::vector--real)
@@ -68,6 +70,8 @@
     (cond
       (number? x) ::scalar--real
       (C/? x) ::scalar--complex)))
+
+(comment (rmat/? (type (mat/<-coll 3 3 (range 9)))))
 
 (defn- rank--domain [x]
   (cond
@@ -86,9 +90,9 @@
   "Increases the set type of the element (if possible), e.g. a real number becomes a complex number or a real matrix becomes a complex matrix."
   [x]
   (case (type x)
-    :scalar--real (createcn/<-real (double x))
+    :scalar--real (cc/<-real (double x))
     :scalar--complex x
-    :matrix--real (createm/<-real x)
+    :matrix--real (mat/<-real x)
     :matrix--complex x
 
     (throw (ex-info "No promotion rule for " {:value x}))))
