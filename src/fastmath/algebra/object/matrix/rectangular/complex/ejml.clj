@@ -17,7 +17,7 @@
    [fastmath.protocol.representation.d2 :as d2])
   (:import
    (java.lang Math)
-   (org.ejml.data Complex_F64 ZMatrixRMaj)
+   (org.ejml.data Complex_F64 ZMatrixRMaj DMatrixRMaj)
    (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM MatrixFeatures_ZDRM)))
 
 (set! *warn-on-reflection* true)
@@ -203,7 +203,7 @@
                         (+ (* j b-cols) q)
                         (- (* ar br) (* ai bi))
                         (+ (* ar bi) (* ai br)))))))))
-      (->ComplexDense out)))
+      (ComplexDense. out)))
 
   (map [_ f]
     ;; TODO: Prevent function from multiple calls to set
@@ -334,7 +334,7 @@
    (->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
 
 (defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
-  (let [A    (.-M  M)
+  (let [A  (.-M  M)
         Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
     (CommonOps_ZDRM/convert A Z)
     (->ComplexDense Z)))
