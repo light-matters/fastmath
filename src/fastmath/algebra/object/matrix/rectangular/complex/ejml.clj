@@ -343,7 +343,6 @@
   (let [nrows (count rows)
         ncols (count (first rows))
 
-        test (println "got to " (flatten rows))
         data  (double-array (flatten rows))]
     (->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
 

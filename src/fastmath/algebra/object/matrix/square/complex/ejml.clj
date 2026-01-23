@@ -35,6 +35,8 @@
   (let [nrows (count rows)
         ncols (count (first rows))
         data  (double-array (flatten rows))]
+    (println "data: ")
+    (println data)
     (complexdense/->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
 
 (defn <-cols  [cols]

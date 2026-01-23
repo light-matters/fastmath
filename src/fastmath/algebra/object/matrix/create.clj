@@ -53,12 +53,16 @@
        (throw (ex-info "Unknown domain" {:domain domain}))))))
 
 (defn- complex-elements?
-  "Check for the different ways that complex elements could be represented."
+  "Check for the different ways that complex elements could be represented.
+
+  First argument is a collection to allow for easy passing of `shape`."
   [[nrows ncols] coll]
-  (let [coll0 (first coll)]
-    (or (C/? coll0)
-        (and (coll? coll0) (= (count coll0) 2))
-        (= (count coll) (* 2 nrows ncols)))))
+  (let [coll--flat (flatten coll)
+        nelements (count coll--flat)]
+    (if (or (= nelements (* 2 nrows ncols))
+            (C/? (first coll--flat)))
+      true
+      false)))
 
 (defn <-coll
   "From 1-D collection. Chooses domain based on the first element. Don't mix real and complex numbers!"
@@ -76,19 +80,30 @@
         (throw (ex-info "Unknown domain" {:domain domain}))))))
 
 (defn <-rows [rows]
-  (let [domain (if-not (C/? (first (first rows))) :real :complex)]
-    (if (= (count rows) (count (first rows)))
-      (case domain
-        :real    (sqrmat/<-rows rows)
-        :complex (sqcmat/<-rows rows)
-        (throw (ex-info "Unknown domain" {:domain domain})))
+  (let [shape [(count rows) (count (first rows))]
+        domain (if-not (complex-elements? shape rows) :real :complex)]
+    (if (= (first shape) (second shape))
+      (do
+        (println domain)
+        (case domain
+          :real    (sqrmat/<-rows rows)
+          :complex (sqcmat/<-rows rows)
+          (throw (ex-info "Unknown domain" {:domain domain}))))
       (case domain
         :real    (rmat/<-rows rows)
         :complex (cmat/<-rows rows)
         (throw (ex-info "Unknown domain" {:domain domain}))))))
 
+(comment
+  (def test-mat [[[-3.0 4.0] [11.0 2.0] [11.0 2.0] [-7.0 -24.0]]
+                 [[-7.0 16.0] [7.0 14.0] [39.0 -2.0] [21.0 -28.0]]
+                 [[-7.0 16.0] [39.0 -2.0] [7.0 14.0] [21.0 -28.0]]
+                 [[-11.0 60.0] [35.0 42.0] [35.0 42.0] [49.0 0.0]]])
+  (<-rows test-mat))
+
 (defn <-cols [cols]
-  (let [domain (if-not (C/? (first (first cols))) :real :complex)]
+  (let [shape [(count cols) (count (first cols))]
+        domain (if-not (complex-elements? shape cols) :real :complex)]
     (if (= (count cols) (count (first cols)))
       (case domain
         :real    (sqrmat/<-cols cols)

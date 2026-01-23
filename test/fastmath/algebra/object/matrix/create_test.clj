@@ -1,7 +1,7 @@
 (ns fastmath.algebra.object.matrix.create-test
   (:require
    [clojure.test :refer [deftest is are]]
-   [fastmath.algebra.object.number.complex.ejml :as C :refer [i]]
+   [fastmath.algebra.object.number.complex.create :refer [i]]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as rejml]
    [fastmath.algebra.object.matrix.rectangular.complex.ejml :as cejml]
 
@@ -86,6 +86,9 @@
 (def complex2x3
   (cdense<-vs [[(i 78 0.0) (i 0.0 77) (i 16.13456 56)]
                [(i 9134 -341) (i 24 2341) (i 10 -56)]]))
+(def complex2x2
+  (cdense<-vs [[(i 78 0.0) (i 0.0 77)]
+               [(i 9134 -341) (i 24 2341)]]))
 (def complex3x2
   (cdense<-vs [[(i 78 0.0) (i 0.0 77) (i 16.13456 56)]
                [(i 9134 -341) (i 24 2341) (i 10 -56)]]
@@ -141,7 +144,12 @@
                  [-5 31 8]
                  [5e10 23 -18e11]
                  [2 13 56]])
-    real5x3))
+    real5x3
+
+    (sut/<-rows
+     [[[78 0.0] [0.0 77]]
+      [[9134 -341] [24 2341]]])
+    complex2x2))
 
 (deftest <-cols-test
   (are [q a] (= q a)
@@ -157,7 +165,12 @@
                  [-5 31 8]
                  [5e10 23 -18e11]
                  [2 13 56]])
-    real3x5))
+    real3x5
+
+    (sut/<-cols
+     [[[78 0.0] [9134 -341]]
+      [[0.0 77] [24 2341]]])
+    complex2x2))
 
 (deftest <-diagonal-test
   (are [q a] (= q a)
