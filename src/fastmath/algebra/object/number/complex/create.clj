@@ -18,5 +18,5 @@
 
 (defn <-real [^double x] (create x))
 
-(def i "Same as `complex` above, but a 'friendlier' syntax."
+(def i "Same as `create` above, but a 'friendlier' syntax."
   create)

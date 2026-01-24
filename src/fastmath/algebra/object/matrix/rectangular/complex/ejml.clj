@@ -5,6 +5,7 @@
    [clojure.string :as str]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.default :as default]
+   [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
@@ -158,25 +159,26 @@
       (ComplexDense. A)))
 
   (inner [_ other]
-    "Complex Frobenius inner product <A,B> = sum(conj(A_ij) * B_ij)."
-   ;; TODO: Return complex number
     (let [B (.M ^ComplexDense other)
           ^doubles da (.getData M)
           ^doubles db (.getData B)
-          n (count (flatten da))]
+          n (alength da)]
+      (when-not (== n (alength db))
+        (throw (ex-info "Shape mismatch for inner product"
+                        {:this-len n :other-len (alength db)})))
       (loop [i 0
              rsum 0.0
              isum 0.0]
         (if (>= i n)
-          [rsum isum]
+          (C/i rsum isum)
           (let [a-re (aget da i)
                 a-im (aget da (inc i))
                 b-re (aget db i)
                 b-im (aget db (inc i))]
           ;; conj(a) * b = (a_re - i a_im) * (b_re + i b_im)
             (recur (+ i 2)
-                   (+ rsum (- (* a-re b-re) (* a-im b-im)))
-                   (+ isum (+ (* a-re b-im) (* a-im b-re)))))))))
+                   (+ rsum (+ (* a-re b-re) (* a-im b-im)))
+                   (+ isum (- (* a-re b-im) (* a-im b-re)))))))))
 
   (outer [_ other]
     (let [B (.M ^ComplexDense other)
