@@ -15,7 +15,7 @@
    [fastmath.protocol.algebra.structure.multiplicative.group :as mg]
    [fastmath.protocol.algebra.structure.ring :as r]
    [fastmath.protocol.algebra.structure.field :as f]
-   [fastmath.protocol.algebra.structure.space.normed :as ns]
+   [fastmath.protocol.algebra.structure.space.normed :as nspace]
    [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
    [fastmath.protocol.algebra.structure.coordinate.polar :as polar]
    [fastmath.core :as m])
@@ -74,7 +74,7 @@
 
   f/Field
 
-  ns/NormedSpace
+  nspace/NormedSpace
   (norm ^double [_]
     (let [^ComplexPolar_F64 polar (ComplexPolar_F64. 0.0 0.0)]
       (ComplexMath_F64/convert z polar)
@@ -144,7 +144,9 @@
 (def ^{:doc "z=pi+0i"} PI (ComplexNumber. (Complex_F64. math/PI 0.0)))
 
 (comment
-  (seq (i 1.0 1.0))
+
+  (println "testing")
+  (C/norm I)
 
   (instance? clojure.lang.Seqable (i 1.0 1.0))
   (f/inverse (i 3 4))

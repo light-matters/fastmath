@@ -14,5 +14,4 @@
 (defn ? [x]
   (and
    (agroup/?  x)
-   (module/?  x)
-   (satisfies? VectorSpace x)))
+   (module/?  x)))

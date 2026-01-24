@@ -13,6 +13,7 @@
    [fastmath.protocol.algebra.object.number.complex :as C]
    [fastmath.algebra.object.number.complex.create :as cc]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
+   [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.algebra.object.matrix.create :as mat]))
 
@@ -25,16 +26,22 @@
 
 ;; Type predicates
 (defn scalar? [x]
-  (or number?
-      C/?))
+  (or (number? x)
+      (C/? x)))
 (defn matrix? [x]
-  ((some-fn cmat/? rmat/?) x))
+  (rmat/? x))
 (defn vector? [x]
   ((every-pred matrix?
                linear-shape?)
    x))
-
-(defn real? [x])
+(defn real? [x]
+  (if (scalar? x)
+    (not (C/? x))
+    (if (rmat/? x)
+      (if (cmat/? x)
+        (cmat/real? x)
+        true)
+      (ex-info "Not a number or matrix!" {}))))
 
 (derive ::matrix ::type)
 (derive ::vector ::type)
@@ -56,7 +63,7 @@
 (derive ::scalar--complex ::scalar)
 (derive ::scalar--complex ::complex)
 
-(defn- type
+(defn type
   "Classify an argument so the arithmetic multimethods can dispatch on it."
   [x]
   (if (rmat/? x)
@@ -70,8 +77,6 @@
     (cond
       (number? x) ::scalar--real
       (C/? x) ::scalar--complex)))
-
-(comment (rmat/? (type (mat/<-coll 3 3 (range 9)))))
 
 (defn- rank--domain [x]
   (cond
@@ -90,12 +95,21 @@
   "Increases the set type of the element (if possible), e.g. a real number becomes a complex number or a real matrix becomes a complex matrix."
   [x]
   (case (type x)
-    :scalar--real (cc/<-real (double x))
-    :scalar--complex x
-    :matrix--real (mat/<-real x)
-    :matrix--complex x
+    ::scalar--real (cc/<-real (double x))
+    ::scalar--complex x
+    ::matrix--real (mat/<-real x)
+    ::matrix--complex x
 
     (throw (ex-info "No promotion rule for " {:value x}))))
+(comment
+  (def m--r
+    (mat/<-coll 3 3 [1 0 0
+                     0 1 0
+                     0 0 1]))
+  (def m--c
+    (mat/<-coll 3 3 (partition 2 (range 18))))
+  (type m--r)
+  (type (promote-domain m--r)))
 
 (defn- ensure-domain-match
   "Takes a pair of arguments and promotes arguments where necessary to ensure compatible domains.
@@ -110,22 +124,31 @@
       (= ta tb) [a b]
       (< ra rb) [(promote-domain a) b]
       :else [a (promote-domain b)])))
+(comment
+  (def cn (cc/i 1.0 -3.0))
+
+  (ensure-domain-match cn 1.0)
+  (ensure-domain-match m--c m--r))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                   Addition                                  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmulti add*
   "Addition that understands matrices, vectors, and scalars."
+  ;; TODO: Check for shape in dispatch?
   (fn [a b]
-    (let [[pa pb] (ensure-domain-match a b)]
-      [(type pa) (type pb)])))
+    [(type a) (type b)]))
+
+(comment
+  (add* m--c m--r))
 
 (defmethod add* [::matrix ::matrix] [a b]
-  (cmat/add a b))
+  (apply cmat/add (ensure-domain-match a b)))
+
 (defmethod add* [::matrix ::scalar] [a s]
-  (cmat/add--s a s))
+  (emat/add--s a s))
 (defmethod add* [::scalar ::matrix] [s a]
-  (cmat/add--s a s))
+  (emat/add--s a s))
 (defmethod add* [::scalar ::scalar] [a b]
   (clojure.core/+ a b))
 
@@ -135,6 +158,9 @@
   ([x y] (add* x y))
   ([x y & more]
    (reduce add* (add* x y) more)))
+
+(println "thing")
+(comment (+ m--c m--r m--r m--c))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -148,12 +174,12 @@
       [(type pa) (type pb)])))
 
 (defmethod subtract* [::matrix ::matrix] [a b]
-  (cmat/sub a b))
+  (emat/subtract a b))
 
 (defmethod subtract* [::matrix ::scalar] [a b]
-  (cmat/add--s a b))
+  (emat/add--s a b))
 ;; (defmethod subtract* [::scalar ::matrix] [a b]
-;;   (cmat/add--s a b))
+;;   (emat/add--s a b))
 ;;   TODO: Does this ^ make sense?
 ;;   
 (defmethod subtract* [::scalar ::scalar] [a b]

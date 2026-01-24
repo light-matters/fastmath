@@ -1,6 +1,7 @@
 (ns fastmath.protocol.algebra.object.matrix.complex
   "Holds definitions that *only* apply to complex, rectangular matrices."
-  (:require [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]))
+  (:require [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
+            [fastmath.protocol.algebra.structure.coordinate.complex :as cc]))
 
 (defprotocol ComplexMatrix
   (adjoint [A])
@@ -21,4 +22,5 @@
 (defn ? [x]
   (and
    (satisfies? rmat/RectangularMatrix x)
+   (cc/? x)
    (satisfies? ComplexMatrix x)))

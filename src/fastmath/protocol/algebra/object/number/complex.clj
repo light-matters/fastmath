@@ -1,9 +1,10 @@
 (ns fastmath.protocol.algebra.object.number.complex
   (:require
-   [fastmath.protocol.algebra.structure.coordinate.complex :as complex-coordinate]
-   [fastmath.protocol.algebra.structure.coordinate.polar :as polar-coordinate]
+   [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
+   [fastmath.protocol.algebra.structure.coordinate.polar :as pc]
    [fastmath.protocol.algebra.structure.field :as field]
-   [fastmath.protocol.algebra.structure.space.normed :as normed-space]))
+
+   [fastmath.protocol.algebra.structure.space.normed :as nspace]))
 
 (defprotocol ComplexNumber
   "A placeholder to indicate that a number has implemented all of the methods necessary to function as a `fastmath` complex number. This can be ensured by calling `?`.
@@ -23,13 +24,28 @@ Other convenience methods are listed below."
   ;; (imaginary? [z])
   )
 
+(def add field/add)
+(def inverse field/inverse)
+(def multiply field/multiply)
+(def zero field/zero)
+(def negate field/negate)
+(def norm nspace/norm)
+
+(def conjugate cc/conjugate)
+(def re cc/re)
+(def im cc/im)
+
+(def angle pc/angle)
+(def magnitude pc/magnitude)
+(def polar pc/polar-values)
+
 (defn ? [x]
   (and
    ;; maths
    (field/? x)
-   (normed-space/? x)
-   (complex-coordinate/?  x)
-   (polar-coordinate/?  x)
+   (nspace/? x)
+   (cc/?  x)
+   (pc/?  x)
    ;; convenience
    (instance? clojure.lang.Seqable x)
    ;; (satisfies? ComplexNumber x)
