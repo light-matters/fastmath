@@ -9,6 +9,7 @@
   ;; - is it necessary to distinguish vectors from matrices?
   (:refer-clojure :exclude [type])
   (:require
+   [fastmath.core :as fm]
    [fastmath.protocol.representation.d2 :as d2]
    [fastmath.protocol.algebra.object.number.complex :as C]
    [fastmath.algebra.object.number.complex.create :as cc]
@@ -101,15 +102,6 @@
     ::matrix--complex x
 
     (throw (ex-info "No promotion rule for " {:value x}))))
-(comment
-  (def m--r
-    (mat/<-coll 3 3 [1 0 0
-                     0 1 0
-                     0 0 1]))
-  (def m--c
-    (mat/<-coll 3 3 (partition 2 (range 18))))
-  (type m--r)
-  (type (promote-domain m--r)))
 
 (defn- ensure-domain-match
   "Takes a pair of arguments and promotes arguments where necessary to ensure compatible domains.
@@ -122,13 +114,9 @@
         rb (rank--domain tb)]
     (cond
       (= ta tb) [a b]
+      (= ra rb) [a b]
       (< ra rb) [(promote-domain a) b]
       :else [a (promote-domain b)])))
-(comment
-  (def cn (cc/i 1.0 -3.0))
-
-  (ensure-domain-match cn 1.0)
-  (ensure-domain-match m--c m--r))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                   Addition                                  ;
@@ -139,18 +127,22 @@
   (fn [a b]
     [(type a) (type b)]))
 
-(comment
-  (add* m--c m--r))
-
 (defmethod add* [::matrix ::matrix] [a b]
   (apply cmat/add (ensure-domain-match a b)))
 
 (defmethod add* [::matrix ::scalar] [a s]
-  (emat/add--s a s))
+  (apply emat/add--s (ensure-domain-match a s)))
 (defmethod add* [::scalar ::matrix] [s a]
-  (emat/add--s a s))
-(defmethod add* [::scalar ::scalar] [a b]
-  (clojure.core/+ a b))
+  (apply emat/add--s (ensure-domain-match a s)))
+
+(defmethod add* [::scalar--real ::scalar--real] [a b]
+  (fm/+ a b))
+(defmethod add* [::scalar--complex ::scalar--complex] [a b]
+  (apply C/add (ensure-domain-match a b)))
+(defmethod add* [::scalar--complex ::scalar--real] [a b]
+  (apply C/add (ensure-domain-match a b)))
+(defmethod add* [::scalar--real ::scalar--complex] [a b]
+  (apply C/add (ensure-domain-match a b)))
 
 (defn +
   "Variadic entry point that reduces via the multimethod."
@@ -159,8 +151,6 @@
   ([x y & more]
    (reduce add* (add* x y) more)))
 
-(println "thing")
-(comment (+ m--c m--r m--r m--c))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

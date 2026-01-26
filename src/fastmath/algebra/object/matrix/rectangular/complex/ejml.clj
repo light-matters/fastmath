@@ -152,10 +152,15 @@
 ;; ==================================================
   emat/MatrixExtra
 ;; ==================================================
-  (add--s [_ s]
-    (let [A (.copy M) d (.data A) s (double s)]
-      (dotimes [k (alength d)]
-        (aset-double d k (+ (aget d k) s)))
+  (add--s [_ ^doubles [re im]]
+    (let [A (.copy M)
+          d (.data A)
+          n (alength d)]
+      (loop [i 0]
+        (when (< i n)
+          (aset-double d i       (+ (aget d i) re))
+          (aset-double d (inc i) (+ (aget d (inc i)) im))
+          (recur (+ i 2))))
       (ComplexDense. A)))
 
   (inner [_ other]
