@@ -5,6 +5,7 @@
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]))
 
 ;; TODO: Add docstrings
+;; - consider splitting into more categories, e.g. contingent, compatible shape, predicates ...
 
 (defprotocol MatrixExtra
   (add--s [A s])
@@ -26,8 +27,8 @@
   )
 (defn ? [x]
   (and
-   ;;
-   (satisfies? rmat/RectangularMatrix x)))
+   (satisfies? rmat/RectangularMatrix x)
+   (satisfies? MatrixExtra x)))
 
 (comment (-> [(into [] (range 10)) (into [] (range 10))]
              flatten

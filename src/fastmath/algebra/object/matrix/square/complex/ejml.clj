@@ -25,7 +25,7 @@
 (defn identity [^long n]
   (complexdense/->ComplexDense (CommonOps_ZDRM/identity n)))
 
-(defn <-real  [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense A]
+(defn <-real  [A]
   (let [M (.-M A)
         Z (ZMatrixRMaj. ^long (.numRows M) ^long (.numCols M))]
     (CommonOps_ZDRM/convert M Z)

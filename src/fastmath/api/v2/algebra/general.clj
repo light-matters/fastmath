@@ -7,7 +7,9 @@
   ;; Currently implemented using EJML. 
   ;; TODO: Check for fixed, square etc. types as well.
   ;; - is it necessary to distinguish vectors from matrices?
-  (:refer-clojure :exclude [type])
+  ;; - Should I go all the way and make a protocol for real numbers? (avoid special cases)
+  ;; - look into type hierarchies (`extend`...) etc. w.r.t. type hints. Currently, square and rectangular matrices count as completely different types and so hinting is limited.
+  (:refer-clojure :exclude [type + - / * vector?])
   (:require
    [fastmath.core :as fm]
    [fastmath.protocol.representation.d2 :as d2]
@@ -19,13 +21,12 @@
    [fastmath.algebra.object.matrix.create :as mat]))
 
 (defn linear-shape?
-  "Boolean or nil."
+  "Does this collection have the shape of a mathematical vector?"
   [coll]
   (if-not (some #{1} (d2/shape coll))
     false
     true))
 
-;; Type predicates
 (defn scalar? [x]
   (or (number? x)
       (C/? x)))
@@ -118,17 +119,24 @@
       (< ra rb) [(promote-domain a) b]
       :else [a (promote-domain b)])))
 
+(defn- same-shape? [m1 m2]
+  (->> [m1 m2]
+       (map d2/shape)
+       (apply =)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                   Addition                                  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmulti add*
   "Addition that understands matrices, vectors, and scalars."
-  ;; TODO: Check for shape in dispatch?
+  ;; TODO: Check for shape in multiplication dispatch?
   (fn [a b]
     [(type a) (type b)]))
 
-(defmethod add* [::matrix ::matrix] [a b]
-  (apply cmat/add (ensure-domain-match a b)))
+(defmethod add* [::matrix ::matrix] [m1 m2]
+  (when (not (same-shape? m1 m2))
+    (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
+  (apply cmat/add (ensure-domain-match m1 m2)))
 
 (defmethod add* [::matrix ::scalar] [a s]
   (apply emat/add--s (ensure-domain-match a s)))
@@ -156,37 +164,44 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                   Subtraction                               ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; WIP:
+
 (defmulti subtract*
   "Subtraction that understands matrices, vectors, and scalars."
-  (fn [a b]
-    (let [[pa pb] (ensure-domain-match a b)]
-      [(type pa) (type pb)])))
+  (fn
+    ([a] [(type a)])
+    ([a b]
+     [(type a) (type b)])))
 
-(defmethod subtract* [::matrix ::matrix] [a b]
-  (emat/subtract a b))
+(defmethod subtract* [::matrix] [m]
+  (cmat/negate m))
+(defmethod subtract* [::scalar--complex] [s]
+  (cmat/negate s))
+(defmethod subtract* [::scalar--real] [s]
+  (fm/- s))
 
-(defmethod subtract* [::matrix ::scalar] [a b]
-  (emat/add--s a b))
-;; (defmethod subtract* [::scalar ::matrix] [a b]
-;;   (emat/add--s a b))
-;;   TODO: Does this ^ make sense?
-;;   
-(defmethod subtract* [::scalar ::scalar] [a b]
-  (clojure.core/- a b))
+(defmethod subtract* [::matrix ::matrix] [m1 m2]
+  (when (not (same-shape? m1 m2))
+    (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
+  (apply emat/subtract (ensure-domain-match m1 m2)))
+
+(defmethod subtract* [::matrix ::scalar] [m s]
+  (apply emat/add--s (ensure-domain-match m (subtract* s))))
+(defmethod subtract* [::scalar ::matrix] [s m]
+  (apply emat/add--s (ensure-domain-match (cmat/negate m) s)))
+
+(defmethod subtract* [::scalar--real ::scalar--real] [a b]
+  (fm/- a b))
+(defmethod subtract* [::scalar--complex ::scalar--complex] [a b]
+  (apply C/subtract (ensure-domain-match a b)))
+(defmethod subtract* [::scalar--complex ::scalar--real] [a b]
+  (apply C/subtract (ensure-domain-match a b)))
+(defmethod subtract* [::scalar--real ::scalar--complex] [a b]
+  (apply C/subtract (ensure-domain-match a b)))
 
 (defn -
   "Variadic entry point that reduces via the multimethod."
-  ([x] x)
+  ([x] (subtract* x))
   ([x y] (subtract* x y))
   ([x y & more]
    (reduce subtract* (subtract* x y) more)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-
-
 

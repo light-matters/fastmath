@@ -3,7 +3,6 @@
   "
   (:require
    [clojure.string :as str]
-   [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.default :as default]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
@@ -11,13 +10,12 @@
    [fastmath.protocol.algebra.structure.additive.monoid :as am]
    [fastmath.protocol.algebra.structure.additive.semigroup :as asg]
    [fastmath.protocol.algebra.structure.module :as module]
-   [fastmath.protocol.algebra.structure.space.vector :as vspace]
    [fastmath.protocol.algebra.structure.space.normed :as nspace]
    [fastmath.protocol.representation.d2 :as d2])
   (:import
    (java.lang Math)
    (org.ejml.data DMatrixRMaj)
-   (org.ejml.dense.row CommonOps_DDRM NormOps_DDRM MatrixFeatures_DDRM)))
+   (org.ejml.dense.row CommonOps_DDRM MatrixFeatures_DDRM NormOps_DDRM)))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
@@ -111,7 +109,7 @@
   ag/AdditiveGroup
   (negate [_]
     (let [A (.copy M)]
-      (CommonOps_DDRM/scale -1.0 0.0 A)
+      (CommonOps_DDRM/scale -1.0 A)
       (RealDense. A)))
 
   module/Module
