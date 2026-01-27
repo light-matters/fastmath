@@ -207,3 +207,26 @@
 
     (sut/- m--c m--r m--r m--c -2)
     (mat/<-real (mat/<-coll 3 3 [0 2 2 2 0 2 2 2 0]))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;            Multiplication           ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(deftest multiply*-matrix-test
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sut/multiply* m--c m--vc)))
+  (are [q a] (= q a)
+    (sut/multiply* m--c m--c) (mat/<-real (mat/zero 3 3))
+    (sut/multiply* m--r m--r) (mat/zero 3 3)
+
+    ;; (sut/subtract* m--c m--r) (mat/<-coll 3 3 '(-1.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 7.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 15.0 17.0))
+    ;; (sut/subtract* m--r m--c) (prot-mat/negate (mat/<-coll 3 3 '(-1.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 7.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 15.0 17.0)))
+    ))
+
+(deftest *-test
+  (are [q a] (= q a)
+    (sut/* m--c m--c) (prot-mat/zero m--c)
+
+    (sut/- m--c m--r m--r m--c)
+    (mat/<-coll 3 3 [-2.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -2.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -2.0 0.0])
+
+    (sut/- m--c m--r m--r m--c -2)
+    (mat/<-real (mat/<-coll 3 3 [0 2 2 2 0 2 2 2 0]))))

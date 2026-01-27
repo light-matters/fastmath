@@ -185,7 +185,7 @@
                    (+ rsum (+ (* a-re b-re) (* a-im b-im)))
                    (+ isum (- (* a-re b-im) (* a-im b-re)))))))))
 
-  (outer [_ other]
+  (kronecker [_ other]
     (let [B (.M ^ComplexDense other)
           a-rows (.getNumRows M)
           a-cols (.getNumCols M)

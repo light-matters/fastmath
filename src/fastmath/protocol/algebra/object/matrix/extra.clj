@@ -10,7 +10,7 @@
 (defprotocol MatrixExtra
   (add--s [A s])
   (inner [A B])
-  (outer [A B])
+  (kronecker [A B])
 
   (multiply [A B])
   ;; TODO: Where to put matrix multiplies? Doesn't always work (dimensions).

@@ -31,14 +31,14 @@
       (sut/inner mat2x2 mat2x2) (C/i 140)
       (sut/inner mat2x2--real mat2x2--real) (C/i 8342)
 
-      (sut/outer mat2x2 mat2x2)
+      (sut/kronecker mat2x2 mat2x2)
       (matrix/<-rows
        [[[-3.0 4.0] [11.0 2.0] [11.0 2.0] [-7.0 -24.0]]
         [[-7.0 16.0] [7.0 14.0] [39.0 -2.0] [21.0 -28.0]]
         [[-7.0 16.0] [39.0 -2.0] [7.0 14.0] [21.0 -28.0]]
         [[-11.0 60.0] [35.0 42.0] [35.0 42.0] [49.0 0.0]]])
 
-      (sut/outer mat2x2--real mat2x2--real)
+      (sut/kronecker mat2x2--real mat2x2--real)
       (matrix/<-real (matrix/<-rows
                       [[2025 1530 1530 1156]
                        [-2025 2520 -1530 1904]

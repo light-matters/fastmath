@@ -143,7 +143,7 @@
                  (+ acc (* (aget da i) (aget db i))))
           acc))))
 
-  (outer [_ other]
+  (kronecker [_ other]
     (let [m (.getNumRows ^DMatrixRMaj M)
           n (.getNumRows ^DMatrixRMaj (.M ^RealDense other))
           ^doubles ad (.getData ^DMatrixRMaj M)

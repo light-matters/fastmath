@@ -205,3 +205,44 @@
   ([x y & more]
    (reduce subtract* (subtract* x y) more)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;            Multiplication           ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- compatible-shapes?
+  "Checks that the given matrices have compatible shapes for 'matrix multiplication'."
+  ;; TODO: Make this check early in the variadic version.
+  [m1 m2]
+  (= (second (d2/shape m1)) (first (d2/shape m2))))
+
+(defmulti multiply*
+  "Multiplication that understands matrices, vectors, and scalars."
+  (fn
+    ([a b]
+     [(type a) (type b)])))
+
+(defmethod multiply* [::matrix ::matrix] [m1 m2]
+  (when (not (compatible-shapes? m1 m2))
+    (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
+  (apply emat/multiply (ensure-domain-match m1 m2)))
+
+(defmethod multiply* [::matrix ::scalar] [m s]
+  (apply rmat/scale (ensure-domain-match m s)))
+(defmethod multiply* [::scalar ::matrix] [s m]
+  (apply rmat/scale (ensure-domain-match m s)))
+
+(defmethod multiply* [::scalar--real ::scalar--real] [a b]
+  (fm/* a b))
+(defmethod multiply* [::scalar--complex ::scalar--complex] [a b]
+  (apply C/multiply (ensure-domain-match a b)))
+(defmethod multiply* [::scalar--complex ::scalar--real] [a b]
+  (apply C/multiply (ensure-domain-match a b)))
+(defmethod multiply* [::scalar--real ::scalar--complex] [a b]
+  (apply C/multiply (ensure-domain-match a b)))
+
+(defn *
+  "Variadic entry point that reduces via the multimethod."
+  ([x] x)
+  ([x y] (multiply* x y))
+  ([x y & more]
+   (reduce multiply* (multiply* x y) more)))
