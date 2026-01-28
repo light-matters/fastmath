@@ -5,6 +5,7 @@
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]))
 
 ;; TODO: Add docstrings
+;; - Change to 'util'
 ;; - consider splitting into more categories, e.g. contingent, compatible shape, predicates ...
 
 (defprotocol MatrixExtra
@@ -13,8 +14,6 @@
   (kronecker [A B])
 
   (multiply [A B])
-  ;; TODO: Where to put matrix multiplies? Doesn't always work (dimensions).
-  ;; TODO: Should these be replaced with mathematical symbols?
   (multiply--e [A B])
   (multiply--v [A v])
 

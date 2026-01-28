@@ -1,8 +1,9 @@
 (ns fastmath.api.v2.algebra.general
   "WARNING: experimental & WIP!
 
-  Towards a unified, flexible, entrypoint for linear algebra across different types, i.e. for those who don't want to have to think about types.
+  Towards a unified, flexible, entrypoint for linear algebra across different mathematical objects, i.e. for those who don't want to have to think about types.
 
+  Such is the case, this namespace prioritizes convenience over 'the law of minimum surprise'. Therefore, multiplying matrices of differing shapes will try to perform something meaningful rather than failing, e.g. perform Kronecker products when normal matrix multiplication wouldn't otherwise work.
   "
   ;; Currently implemented using EJML. 
   ;; TODO: Check for fixed, square etc. types as well.
@@ -11,14 +12,17 @@
   ;; - look into type hierarchies (`extend`...) etc. w.r.t. type hints. Currently, square and rectangular matrices count as completely different types and so hinting is limited.
   (:refer-clojure :exclude [type + - / * vector?])
   (:require
+   [fastmath.api.v2.algebra.complex.number]
    [fastmath.core :as fm]
    [fastmath.protocol.representation.d2 :as d2]
-   [fastmath.protocol.algebra.object.number.complex :as C]
-   [fastmath.algebra.object.number.complex.create :as cc]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.algebra.object.matrix.create :as mat]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;              Structure relationships
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn linear-shape?
   "Does this collection have the shape of a mathematical vector?"
@@ -124,6 +128,11 @@
        (map d2/shape)
        (apply =)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ; Core Aliases  ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def norm rmat/norm)
+(def zero rmat/zero)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                   Addition                                  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -246,3 +255,4 @@
   ([x y] (multiply* x y))
   ([x y & more]
    (reduce multiply* (multiply* x y) more)))
+

@@ -233,7 +233,10 @@
       (sut/multiply*  7.0 m--r) mr7
 
       (sut/multiply* m--r (C/i 7.0)) (mat/<-real mr7)
-      (sut/multiply*  (C/i 7.0) m--r) (mat/<-real mr7))))
+      (sut/multiply*  (C/i 7.0) m--r) (mat/<-real mr7))
+
+    ;; TODO: outer products
+    ))
 
 (deftest *-test
   (are [q a] (= q a)
