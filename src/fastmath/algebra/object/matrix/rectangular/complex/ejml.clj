@@ -145,7 +145,7 @@
   module/Module
   (scale [_ z]
     (let [A (.copy M)
-          [r i] (if (coll? z) z [z 0.0])]
+          [r i] (if (seqable? z) z [z 0.0])]
       (CommonOps_ZDRM/scale (double r) (double i) A)
       (ComplexDense. A)))
 

@@ -214,19 +214,33 @@
   (is (thrown? clojure.lang.ExceptionInfo
                (sut/multiply* m--c m--vc)))
   (are [q a] (= q a)
-    (sut/multiply* m--c m--c) (mat/<-real (mat/zero 3 3))
-    (sut/multiply* m--r m--r) (mat/zero 3 3)
+    (sut/multiply* m--c m--c) (mat/<-coll 3 3 [-27.0 144.0 -33.0 174.0 -39.0 204.0 -45.0 378.0 -51.0 480.0 -57.0 582.0 -63.0 612.0 -69.0 786.0 -75.0 960.0])
+    (sut/multiply* m--r m--r) (mat/identity 3)
+    (sut/multiply* m--c m--r) m--c
+    (sut/multiply* m--r m--c) m--c))
 
-    ;; (sut/subtract* m--c m--r) (mat/<-coll 3 3 '(-1.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 7.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 15.0 17.0))
-    ;; (sut/subtract* m--r m--c) (prot-mat/negate (mat/<-coll 3 3 '(-1.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 7.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 15.0 17.0)))
-    ))
+(deftest multiply*-m-s-test
+  (let [mc5 (mat/<-coll 3 3 [0.0 5.0 10.0 15.0 20.0 25.0 30.0 35.0 40.0 45.0 50.0 55.0 60.0 65.0 70.0 75.0 80.0 85.0])
+        mr7 (mat/diagonal (repeat 3 7))]
+    (are [a q] (= q a)
+      (sut/multiply* m--c 5.0) mc5
+      (sut/multiply*  5.0 m--c) mc5
+
+      (sut/multiply* m--c (C/i 5.0)) mc5
+      (sut/multiply* (C/i 5.0) m--c) mc5
+
+      (sut/multiply* m--r 7.0) mr7
+      (sut/multiply*  7.0 m--r) mr7
+
+      (sut/multiply* m--r (C/i 7.0)) (mat/<-real mr7)
+      (sut/multiply*  (C/i 7.0) m--r) (mat/<-real mr7))))
 
 (deftest *-test
   (are [q a] (= q a)
-    (sut/* m--c m--c) (prot-mat/zero m--c)
+    (sut/* m--c m--c) (mat/<-coll 3 3 [-27.0 144.0 -33.0 174.0 -39.0 204.0 -45.0 378.0 -51.0 480.0 -57.0 582.0 -63.0 612.0 -69.0 786.0 -75.0 960.0])
 
-    (sut/- m--c m--r m--r m--c)
-    (mat/<-coll 3 3 [-2.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -2.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -2.0 0.0])
+    (sut/* m--c m--r m--r m--c)
+    (mat/<-coll 3 3 [-27.0 144.0 -33.0 174.0 -39.0 204.0 -45.0 378.0 -51.0 480.0 -57.0 582.0 -63.0 612.0 -69.0 786.0 -75.0 960.0])
 
-    (sut/- m--c m--r m--r m--c -2)
-    (mat/<-real (mat/<-coll 3 3 [0 2 2 2 0 2 2 2 0]))))
+    (sut/* m--c m--r m--r m--c -2)
+    (mat/<-coll 3 3 [54.0 -288.0 66.0 -348.0 78.0 -408.0 90.0 -756.0 102.0 -960.0 114.0 -1164.0 126.0 -1224.0 138.0 -1572.0 150.0 -1920.0])))
