@@ -26,41 +26,6 @@
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.algebra.object.matrix.create :as mat]))
 
-(derive ::matrix ::type)
-(derive ::vector ::type)
-(derive ::scalar ::type)
-
-(derive ::matrix--real ::matrix)
-(derive ::matrix--real ::real)
-(derive ::matrix--complex ::matrix)
-(derive ::matrix--complex ::complex)
-
-(derive ::vector ::matrix)
-(derive ::vector--real ::vector)
-(derive ::vector--real ::real)
-(derive ::vector--complex ::vector)
-(derive ::vector--complex ::complex)
-
-(derive ::scalar--real ::scalar)
-(derive ::scalar--real ::real)
-(derive ::scalar--complex ::scalar)
-(derive ::scalar--complex ::complex)
-
-(defn type
-  "Classify an argument so the arithmetic multimethods can dispatch on it."
-  [x]
-  (if (rmat/? x)
-    (if (pred/linear-shape? x)
-      (if (cmat/? x)
-        ::vector--complex
-        ::vector--real)
-      (if (cmat/? x)
-        ::matrix--complex
-        ::matrix--real))
-    (cond
-      (number? x) ::scalar--real
-      (pred/complex-number? x) ::scalar--complex)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ; Core Aliases  ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -134,11 +99,11 @@
 (defmethod subtract* [::scalar--real ::scalar--real] [a b]
   (fm/- a b))
 (defmethod subtract* [::scalar--complex ::scalar--complex] [a b]
-  (apply C/subtract (plumb/ensure-domain-match a b)))
+  (apply pf/subtract (plumb/ensure-domain-match a b)))
 (defmethod subtract* [::scalar--complex ::scalar--real] [a b]
-  (apply C/subtract (plumb/ensure-domain-match a b)))
+  (apply pf/subtract (plumb/ensure-domain-match a b)))
 (defmethod subtract* [::scalar--real ::scalar--complex] [a b]
-  (apply C/subtract (plumb/ensure-domain-match a b)))
+  (apply pf/subtract (plumb/ensure-domain-match a b)))
 
 (defn -
   "Variadic entry point that reduces via the multimethod."
