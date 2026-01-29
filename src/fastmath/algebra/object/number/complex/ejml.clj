@@ -6,6 +6,7 @@
   (:require
    [clojure.math :as math]
    [fastmath.default :as default]
+   [fastmath.protocol.algebra.function.field :as ff]
    [fastmath.protocol.algebra.object.number.complex :as C]
    [fastmath.protocol.algebra.structure.additive.semigroup :as as]
    [fastmath.protocol.algebra.structure.additive.monoid :as am]
@@ -96,7 +97,7 @@
       (ComplexMath_F64/convert z polar)
       (.-r polar)))
 
-  C/ComplexNumber
+  ff/FieldFunction
   (subtract [_ z2]
     (let [out (Complex_F64.)]
       (ComplexMath_F64/minus z (.-z ^ComplexNumber z2) out)

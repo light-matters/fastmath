@@ -135,6 +135,7 @@ interoperability
 *** Python
 *** Wolframite
 ** clay doc
+** clean nses
 
 ** postponed
 *** initial performance tests 

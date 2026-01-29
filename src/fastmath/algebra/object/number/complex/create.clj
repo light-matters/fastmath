@@ -9,14 +9,16 @@
    (org.ejml.data Complex_F64)))
 
 (defn create
-  "Creates a complex number represented as an ejml `ComplexNumber`.
+  "Creates a complex number, (currently) represented as an ejml `ComplexNumber`.
   Takes optional real and imaginary parts."
 
   ([^double x ^double y] (cn/->ComplexNumber (Complex_F64. x y)))
   ([^double x] (cn/->ComplexNumber (Complex_F64. x 0.0)))
   ([] cn/ZERO))
 
-(defn <-real [^double x] (create x))
+(defn <-real
+  "A complex number from a real number, for consistency with matrix creation naming. In general, `i` is to be preferred for consistency."
+  [^double x] (create x))
 
-(def i "Same as `create` above, but a 'friendlier' syntax."
+(def i "Creates a complex number according to supplied arguments: (0,0), (re,0) or (re,im)."
   create)

@@ -14,12 +14,7 @@
 Other convenience methods are listed below."
   ;; TODO:
   ;; - (temp) put core (but not strictly necessary) operations in another protocol
-  ;; - maybe add a way of getting the polar coordinates in one go
 
-  (subtract [z1 z2])
-  (divide [z1 z2])
-  (square [z])
-  (square-root [z])
   ;; (real? [z])
   ;; (imaginary? [z])
   )
@@ -45,8 +40,4 @@ Other convenience methods are listed below."
    (field/? x)
    (nspace/? x)
    (cc/?  x)
-   (pc/?  x)
-   ;; convenience
-   (instance? clojure.lang.Seqable x)
-   ;; (satisfies? ComplexNumber x)
-   ))
+   (pc/?  x)))
