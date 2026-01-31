@@ -19,7 +19,7 @@
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
-(println "=== start ===")
+;; (println "=== start ===")
 ;; ^^^ Used for debugging
 
 ;; ==================================================

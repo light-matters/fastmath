@@ -33,19 +33,31 @@
           (partition (* 2 3) (range 18)))
     (sut/rows m--c)))
 
+(defn- ->array2d ^"[[D" [rows]
+  (let [r (count rows)
+        c (count (first rows))
+        arr (make-array Double/TYPE r c)]
+    (dotimes [i r]
+      (dotimes [j c]
+        (aset-double arr i j (double ((rows i) j)))))
+    arr))
+
 (deftest transformation
-  (are [a e] (= a e)
+  (are [e a] (= e a)
     ;; ->array
-    ;; (sut/->array m--c)
+    (vec (->array2d [[1 0 0] [0 1 0] [0 0 1]]))
+    (vec (sut/->array m--r))
 
-    ;; map
-
+;; map
     (mat/<-coll 3 3
                 (flatten (map (fn [[x y]] [(inc x) y])
                               (partition 2 (range 18)))))
+    (sut/fmap m--c (fn [r i] [(inc r) i]))
 
-    (sut/fmap m--c #(apply rmat/add [%1 1]))))
+    (mat/<-coll 3 3 (interleave [1 0 0 0 1 0 0 0 1] (repeat 9 -1)))
+    (sut/fmap (mat/<-real m--r) (fn [r i] [r (dec i)]))))
 
 (comment
   m--c
   (sut/fmap m--c #(rmat/add % (C/i 100.0))))
+

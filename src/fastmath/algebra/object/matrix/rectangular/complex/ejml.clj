@@ -298,13 +298,8 @@
   ;;     (CommonOps_ZDRM/extractDiag M out)
   ;;     (ComplexDense. out)))
 
-  (->array [_]
-    (let [r (.numRows M) c (.numCols M)
-          out (make-array Double/TYPE r c)]
-      (dotimes [i r]
-        (dotimes [j c]
-          (aset-double out i j (getc M i j))))
-      out))
+  (->array ^doubles [_]
+    (.getData M))
 ;; ==================================================
   cc/ComplexCoordinate
 ;; ==================================================
@@ -389,6 +384,6 @@
              println)
 
          (-> (ComplexDense. (ZMatrixRMaj. 3 3))
-             (d2/fmap (fn [r i] [(dec r) i]))
-             println))
+             d2/->array
+             vec))
 
