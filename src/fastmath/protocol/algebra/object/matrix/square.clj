@@ -4,13 +4,7 @@
 
 (defprotocol SquareMatrix
   (determinant [A])
-  (trace [A])
-
-  ;; Most of these predicates are here because the implementation is computationally expensive
-  (normal? [A])
-  (symmetric? [A])
-  (singular? [A])
-  (unitary? [A]))
+  (trace [A]))
 
 (def add rmat/add)
 (def zero rmat/zero)

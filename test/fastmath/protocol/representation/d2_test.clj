@@ -3,7 +3,9 @@
             [fastmath.protocol.algebra.object.matrix.rectangular :as rmat] [fastmath.algebra.object.number.complex.create :as C]
             [fastmath.algebra.test-object :as to :refer [m--c, m--r m--vc m--vrand]]
             [clojure.test :as t :refer [deftest are testing]]
-            [fastmath.algebra.object.matrix.create :as mat]))
+            [fastmath.algebra.object.matrix.create :as mat])
+  (:import
+   (java.util Arrays)))
 
 (deftest information
   (are [e a] (= a e)
@@ -43,10 +45,11 @@
     arr))
 
 (deftest transformation
-  (are [e a] (= e a)
+  (are [e a] (Arrays/deepEquals e a)
     ;; ->array
-    (vec (->array2d [[1 0 0] [0 1 0] [0 0 1]]))
-    (vec (sut/->array m--r))
+    (->array2d [[1 0 0] [0 1 0] [0 0 1]])
+    (sut/->array m--r))
+  (are [e a] (= e a)
 
 ;; map
     (mat/<-coll 3 3
@@ -58,6 +61,10 @@
     (sut/fmap (mat/<-real m--r) (fn [r i] [r (dec i)]))))
 
 (comment
+
+  (Arrays/deepEquals
+   (->array2d [[1 0 0] [0 1 0] [0 0 1]])
+   (sut/->array m--r))
   m--c
   (sut/fmap m--c #(rmat/add % (C/i 100.0))))
 

@@ -247,4 +247,5 @@ Fastmath uses a mixture of apache and hard-coded clojure?
 - naming conventions (element more conventional)
 - ability to refer to constructors without the implementation
 - ...dense to fastmath object
+- experiment in the suitability of Clojure for general mathematics 
 

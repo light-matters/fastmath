@@ -9,6 +9,8 @@
    [fastmath.algebra.object.number.complex.ejml :as Craw]
    [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
+   [fastmath.protocol.algebra.object.matrix.predicate :as pred]
+   [fastmath.protocol.algebra.object.matrix.complex-predicate :as cpred]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.protocol.algebra.structure.additive.group :as ag]
@@ -20,6 +22,7 @@
    [fastmath.protocol.representation.d2 :as d2])
   (:import
    (java.lang Math)
+   (org.ejml.simple.ops SimpleOperations_ZDRM)
    (org.ejml.data Complex_F64 ZMatrixRMaj DMatrixRMaj)
    (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM MatrixFeatures_ZDRM)))
 
@@ -68,6 +71,21 @@
    (let [A (.copy m)]
      (.set A i j (.-real cnum) (.-imaginary cnum))
      A)))
+
+(defn- multiply--m [m1 m2]
+  (let [out (ZMatrixRMaj. (.numRows m1) (.numCols m2))]
+    (CommonOps_ZDRM/mult m1 m2 out)
+    out))
+
+(defn- transpose [m]
+  (let [T (ZMatrixRMaj. (.numCols m) (.numRows m))]
+    (CommonOps_ZDRM/transpose m T)
+    T))
+
+(defn- conjugate-transpose [^ZMatrixRMaj m]
+  (let [^ZMatrixRMaj out (ZMatrixRMaj. (.numCols m) (.numRows m))]
+    (CommonOps_ZDRM/transposeConjugate m out)
+    out))
 
 (defn  format--real ^String [^double x ^long p ^double eps]
   (format (str "%." p "f") (if (< (Math/abs x) eps) 0.0 x)))
@@ -126,6 +144,20 @@
 ;                                 ComplexDense                                ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; (deftype ComplexDense [^ZMatrixRMaj M]
+;;   rmat/RectangularMatrix
+;;   asg/AdditiveSemigroup
+;;   am/AdditiveMonoid
+;;   ag/AdditiveGroup
+;;   nspace/NormedSpace
+
+;;   module/Module
+;;   emat/MatrixExtra
+;;   d2/D2
+;;   cc/ComplexCoordinate
+;;   cmat/ComplexMatrix
+;;   Object)
+;;   
 (deftype ComplexDense [^ZMatrixRMaj M]
 ;; ==================================================
   rmat/RectangularMatrix
@@ -239,10 +271,7 @@
       (ComplexDense. M)))
 
   (multiply [_ other]
-    (let [^ZMatrixRMaj B (.M ^ComplexDense other)
-          out (ZMatrixRMaj. (.numRows M) (.numCols B))]
-      (CommonOps_ZDRM/mult M B out)
-      (ComplexDense. out)))
+    (ComplexDense. (multiply--m M (.M ^ComplexDense other))))
   (multiply--e [this other]
     (let [^ZMatrixRMaj B (.M ^ComplexDense other)]
       (ComplexDense. (CommonOps_ZDRM/elementMultiply M B nil nil))))
@@ -257,10 +286,9 @@
           out (ZMatrixRMaj. (.numRows M) (.numCols M))]
       (CommonOps_ZDRM/subtract M B out)
       (ComplexDense. out)))
+
   (transpose [_]
-    (let [T (ZMatrixRMaj. (.numCols M) (.numRows M))]
-      (CommonOps_ZDRM/transpose M T)
-      (ComplexDense. T)))
+    (ComplexDense. (transpose M)))
 
   (square? [_]
     (= (.numRows M) (.numCols M)))
@@ -311,16 +339,35 @@
   cmat/ComplexMatrix
 ;; ==================================================
   (adjoint [_]
-    (let [^ZMatrixRMaj out (ZMatrixRMaj. (.numCols M) (.numRows M))]
-      (CommonOps_ZDRM/transposeConjugate M out)
-      (ComplexDense. out)))
-
-  ;; (hermitian? [_]
-  ;;   (MatrixFeatures_ZDRM/isHermitian M default/tolerance))
+    (ComplexDense. (conjugate-transpose M)))
 
   (real? [_]
     (realZM? M))
+;; ==================================================
+  pred/MatrixPredicate
+;; ==================================================
+  (square? [_] (= (.numRows M) (.numCols M)))
+  (normal? [_] (and (= (.numRows M) (.numCols M))
+                    (= (multiply--m M (conjugate-transpose M))
+                       (multiply--m (conjugate-transpose M) M))))
+  (symmetric? [_] (and (= (.numRows M) (.numCols M))
+                       (= M (transpose M))))
+  (singular? [_] (and (= (.numRows M) (.numCols M))
+                      (= (.determinantComplex SimpleOperations_ZDRM M) (C/i 0.0))))
+  (unitary? [_] (.isUnitary M default/tolerance))
 
+;; ==================================================
+  cpred/ComplexPredicate
+;; ==================================================
+  (hermitian? [_]
+    (MatrixFeatures_ZDRM/isHermitian M default/tolerance))
+;; ==================================================
+  clojure.lang.Seqable
+;; ==================================================
+  (seq [_] (seq (.getData M)))
+;; ==================================================
+  clojure.lang.Sequential
+;; ==================================================
 ;; ==================================================
   Object
 ;; ==================================================
@@ -383,7 +430,8 @@
          (-> (cmat/add A--test B--test)
              println)
 
-         (-> (ComplexDense. (ZMatrixRMaj. 3 3))
-             d2/->array
-             vec))
+         (->> (ComplexDense. (ZMatrixRMaj. 3 3))
+              .-M
+              .getData
+              seq))
 

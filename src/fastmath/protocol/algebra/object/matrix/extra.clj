@@ -19,11 +19,7 @@
 
   (subtract [A B])
   ;; NOTE: Available for efficiency reasons.
-  (transpose [A])
-
-  (square? [A])
-  ;; TODO: square? should maybe be part of the function nses
-  )
+  (transpose [A]))
 (defn ? [x]
   (and
    (satisfies? rmat/RectangularMatrix x)

@@ -20,7 +20,6 @@
 
 ;; Transformation
   ;; Assuming that `clojure.lang.Seqable` is implemented
-  ;; (seq<- [d2])
   (->array ; "Returns a 2D-array"
     [d2])
   (fmap [d2 f])
