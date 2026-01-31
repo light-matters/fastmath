@@ -226,13 +226,17 @@
     ;; - Prevent function from multiple calls to set
     ;; - Work on (.data A) directly
     ;; - check number of arguments and branch?
-    (let [^ZMatrixRMaj A (.copy M)]
-      (dotimes [i (.numRows A)]
-        (dotimes [j (.numCols A)]
-          (let [Z (f (->C (getc A i j)))]
-            (println Z)
-            (setc A i j (first Z) (second Z)))))
-      (ComplexDense. A)))
+    (let [^doubles d (.getData M)
+          n (alength d)]
+      (loop [i 0]
+        (when (< i n)
+          (let [re (aget d i)
+                im (aget d (unchecked-inc-int i))
+                [re' im'] (f re im)]
+            (aset-double d i (double re'))
+            (aset-double d (unchecked-inc-int i) (double im'))
+            (recur (unchecked-add-int i 2)))))
+      (ComplexDense. M)))
 
   (multiply [_ other]
     (let [^ZMatrixRMaj B (.M ^ComplexDense other)
@@ -384,6 +388,7 @@
          (-> (cmat/add A--test B--test)
              println)
 
-         (-> (->ComplexDense (ZMatrixRMaj. 3 3))
+         (-> (ComplexDense. (ZMatrixRMaj. 3 3))
+             (d2/fmap (fn [r i] [(dec r) i]))
              println))
 
