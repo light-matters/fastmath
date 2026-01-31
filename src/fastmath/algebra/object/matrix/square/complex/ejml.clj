@@ -1,4 +1,5 @@
 (ns fastmath.algebra.object.matrix.square.complex.ejml
+  (:refer-clojure :exclude [identity])
   (:require
    [fastmath.algebra.object.matrix.rectangular.complex.ejml :as complexdense])
   (:import

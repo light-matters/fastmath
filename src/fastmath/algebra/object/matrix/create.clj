@@ -6,6 +6,7 @@
   ;; TODO: Make SquareMatrices where appropriate (currently just placeholders)
   ;; TODO: Make fixed sizes matrices where appropriate
   ;; TODO: Make implementation choice optional?
+  (:refer-clojure :exclude [identity])
   (:require
    [fastmath.protocol.representation.d2 :as d2]
    [fastmath.protocol.algebra.object.number.complex :as C]

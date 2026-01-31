@@ -8,7 +8,6 @@
    [fastmath.api.v2.algebra.predicate :as pred]
    [fastmath.algebra.test-object :as t]
    [fastmath.protocol.algebra.object.matrix.rectangular :as prot-mat]
-   [fastmath.algebra.plumb :as pl]
    [fastmath.algebra.object.matrix.create :as mat]
    [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.api.v2.algebra.general :as sut]))

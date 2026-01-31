@@ -8,9 +8,9 @@
   (ncols [d2])
 
 ;; Retrieval
-  (element [m row col])
-  (column [m id])
-  (row [m id])
+  (element [d2 row col])
+  (column [d2 id])
+  (row [d2 id])
   (columns [d2])
   (rows [d2])
 
@@ -21,8 +21,11 @@
 ;; Transformation
   ;; Assuming that `clojure.lang.Seqable` is implemented
   ;; (seq<- [d2])
-  (array<- ;; "Returns a 2D-array"
+  (->array ; "Returns a 2D-array"
     [d2])
-  (map [d2 f])
-  ;; WARNING: the first argument of`map--m` is not the same as `core`. This is due to a limitation of protocols. 
+  (fmap [d2 f])
+  ;; WARNING:
+  ;; - the first argument of`map--m` is not the same as `core`. This is due to a limitation of protocols.
+  ;; - `f` should also be a function of two arguments when applied to a complex matrix
+  ;; 
   )

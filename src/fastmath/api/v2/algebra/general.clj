@@ -16,6 +16,7 @@
   (:refer-clojure :exclude [type + - / * vector?])
   (:require
    [fastmath.api.v2.algebra.complex :as C]
+   [fastmath.algebra.object.type :as type]
    [fastmath.api.v2.algebra.predicate :as pred]
    [fastmath.algebra.plumb :as plumb]
    [fastmath.core :as fm]
@@ -38,7 +39,7 @@
   "Addition that understands matrices, vectors, and scalars."
   ;; TODO: Check for shape in multiplication dispatch?
   (fn [a b]
-    [(type a) (type b)]))
+    [(type/? a) (type/? b)]))
 
 (defmethod add* [::matrix ::matrix] [m1 m2]
   (when (not (pred/same-shape? m1 m2))
@@ -75,9 +76,9 @@
 (defmulti subtract*
   "Subtraction that understands matrices, vectors, and scalars."
   (fn
-    ([a] [(type a)])
+    ([a] [(type/? a)])
     ([a b]
-     [(type a) (type b)])))
+     [(type/? a) (type/? b)])))
 
 (defmethod subtract* [::matrix] [m]
   (cmat/negate m))
@@ -126,7 +127,7 @@
   "Multiplication that understands matrices, vectors, and scalars."
   (fn
     ([a b]
-     [(type a) (type b)])))
+     [(type/? a) (type/? b)])))
 
 (defmethod multiply* [::matrix ::matrix] [m1 m2]
   (when (not (compatible-shapes? m1 m2))

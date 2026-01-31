@@ -240,3 +240,11 @@ Fastmath uses a mixture of apache and hard-coded clojure?
   Confusing complex number support. Probably doesn't do matrix multiplication. 
   -    This was wrong. Does do complex matrices, but found a bug.
   - might be a good default for real operations?
+* Report ideas
+- Full implementation of the fastmath *protocol* API... (in features)
+- but split
+- list of new protocols (with explanation)
+- naming conventions (element more conventional)
+- ability to refer to constructors without the implementation
+- ...dense to fastmath object
+

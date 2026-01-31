@@ -2,7 +2,6 @@
   "For all of your (yes-no) algebraic questions."
   (:refer-clojure :exclude [vector?])
   (:require
-   [fastmath.algebra.object.type :as type]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.protocol.algebra.object.number.complex :as pC]
@@ -45,5 +44,3 @@
          (map d2/shape)
          (apply =))
     false))
-
-(def type type/?)

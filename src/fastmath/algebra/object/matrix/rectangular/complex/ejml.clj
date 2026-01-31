@@ -1,10 +1,12 @@
 (ns fastmath.algebra.object.matrix.rectangular.complex.ejml
   "Implementing complex matrices using EJML as a backend [https://github.com/lessthanoptimal/ejml].
   "
+  ;; TODO: implement inc and dec etc.?
   (:require
    [clojure.string :as str]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.default :as default]
+   [fastmath.algebra.object.number.complex.ejml :as Craw]
    [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
@@ -23,7 +25,7 @@
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
-(println "=== start ===")
+;; (println "=== start ===")
 ;; ^^^ Used for debugging
 
 ;; ==================================================
@@ -46,6 +48,9 @@
   "Reuses the destination memory for multiple access calls."
   [])
 
+(defn- ->C [CF64]
+  (C/i (.getReal CF64) (.getImaginary CF64)))
+
 (defn- getc
   "Utility for returning complex numbers from a matrix."
   [^ZMatrixRMaj m ^long i ^long j]
@@ -56,9 +61,13 @@
 (defn- setc
   ;; TODO: Should have a multiple element version 
   "Utility for assigning complex numbers to a matrix."
-  [^ZMatrixRMaj m  i j ^Complex_F64 cnum]
-  (let [A (.copy m)]
-    (.set A i j (.-real cnum) (.-imaginary cnum)) A))
+  ([^ZMatrixRMaj m  i j cr ci]
+   (let [A (.copy m)]
+     (.set A i j cr ci) A))
+  ([^ZMatrixRMaj m  i j ^Complex_F64 cnum]
+   (let [A (.copy m)]
+     (.set A i j (.-real cnum) (.-imaginary cnum))
+     A)))
 
 (defn  format--real ^String [^double x ^long p ^double eps]
   (format (str "%." p "f") (if (< (Math/abs x) eps) 0.0 x)))
@@ -212,14 +221,19 @@
                         (+ (* ar bi) (* ai br)))))))))
       (ComplexDense. out)))
 
-  (map [_ f]
-    ;; TODO: Prevent function from multiple calls to set
+  (fmap [_ f]
+    ;; TODO: VERY INEFFICIENT!
+    ;; - Prevent function from multiple calls to set
     ;; - Work on (.data A) directly
+    ;; - check number of arguments and branch?
     (let [^ZMatrixRMaj A (.copy M)]
       (dotimes [i (.numRows A)]
         (dotimes [j (.numCols A)]
-          (setc A i j (f (getc A i j)))))
+          (let [Z (f (->C (getc A i j)))]
+            (println Z)
+            (setc A i j (first Z) (second Z)))))
       (ComplexDense. A)))
+
   (multiply [_ other]
     (let [^ZMatrixRMaj B (.M ^ComplexDense other)
           out (ZMatrixRMaj. (.numRows M) (.numCols B))]
@@ -257,7 +271,7 @@
 
   ;; -------- Retrieval --------
   (element [_ i j]
-    (getc M (long i) (long j)))
+    (Craw/->ComplexNumber (getc M (long i) (long j))))
 
   (column [_ j]
     (ComplexDense. (extract M [0 (.numRows M)] [j (+ 1 (long j))])))
@@ -280,7 +294,7 @@
   ;;     (CommonOps_ZDRM/extractDiag M out)
   ;;     (ComplexDense. out)))
 
-  (array<- [_]
+  (->array [_]
     (let [r (.numRows M) c (.numCols M)
           out (make-array Double/TYPE r c)]
       (dotimes [i r]
@@ -363,7 +377,8 @@
          (def A--test (complexdense 2 2 (double-array [1 1 0 0 1 0 0 0])))
          (def B--test (complexdense 2 2 (double-array [1 0 1 0 1 0 0 1])))
 
-         (complexdense 3 3)
+         (d2/element (complexdense 3 3) 0 0)
+
          (println A--test)
          (println B--test)
          (-> (cmat/add A--test B--test)
