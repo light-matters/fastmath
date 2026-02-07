@@ -55,60 +55,9 @@ I would proceed as follows:
 Complex numbers now underpin quantitative life, so whether you are a mathematician, natural scientist or engineer, they come up daily. Even for other types of programmer, complex numbers are the basis of signal (e.g. audio, radar and communications) and image (compression, detection, texture analysis and optics) processing. They now even feature heavily in MRI data and machine learning: extending the user-base to data scientists too.
 
 Such is the case, I hope that this project will both help the community directly and also help contribute to the expansion of the community itself. There is a large section of numerical scientists who are not programmers but who rely on tools like Mathematica and Matlab. Many also use Python, where complex numbers are embedded. These projects are all lacking however, Mathematica and Matlab are not convenient languages for general programming, and so bigger projects, and Python is still, at heart, a scripting language lacking parallelism and REPL interaction. Until Clojure catches up with these however, we will not be able to win over many new users from these fields. A consistent complex API would be a small step, but a necessary one towards this goal.
-* Questions
-** state of core.matrix?
-dead!
-** What API should we follow?
-*** should we branch on 'complex' right at the start?
-i.e. ...matrix.dense.complex.ejml
-or ...complex.matrix.dense.ejml
-*** Should the impementation be high or low in the API?
-i.e. matrix.complex.ejml.dense or complex.matrix.dense.ejml
-
-thinking at the bottom so that the API is conceptual. 
-
-** implementation on Neanderthal?
-** How should we insert it in the namespace?
-eventually generalize the fastmath matrix space
-** Where can we store the type?
-
-** libraries available
-https://github.com/lsolbach/qclojure/blob/math-refactoring/src/org/soulspace/qclojure/domain/math/clojure_math.clj
-
-https://github.com/lessthanoptimal/ejml
-
-https://github.com/jblas-project/jblas
-- considered but weird dependencies
-
-apache commons field matrix?
-and complex (field?) vectors
-
-compare and make a decision
-** Do we have to change how complex numbers are implemented in fastmath?
-Needs to play nicely with `Complex_F64` for `EJML`
-
-would be nice not to have to do this
-** TODO Should `protocol` be a parallel ns branch or in the same folder as the implementations?
-** Should protocols represent interface contracts?
-i.e. If you implement this, your operation works for all inputs of your type?
-
-** Is it convenient (in EJML) to coerce ZMatrices to DMatrices if all of the elements are real?
-** Should 'm' be replaced with 'M' as the standard placeholder?
-** Does fastmath have a 'nice' complex number string output?
-** Should complex matrices come under complex or matrix?
-** Where should the implementation of complex number be, if matrices are going to interact with them consistently?
-** Similarly to complex number, where should constants like default tolerance be found?
-** Would an implementation based on dtype-next be efficient?
-[[x y] [x y]]
- [x y] [x y]]
-*** I guess all of the operations and decomposition etc. would have to be manually implemented...
-** Do we need a separate matrix and vector namespace?
-** Where should constructors go for key protocols? 
-* Transform support
-- fft4j
 * Checklist
 ** API creation
-*** TODO fundamental matrix ops
+*** fundamental matrix ops
 Use fastmath tests
 **** add 
 **** subtract
@@ -118,26 +67,26 @@ Use fastmath tests
 **** inner product
 **** outer product
 **** multiply
-**** multiply elements
+**** TODO multiply elements
+check this
 
 *** easy interoperability?
-*** LU decomposition and solver
-*** fixed size matrices (efficiency)
+*** TODO LU decomposition and solver
+check
 ** Integration
-*** clay
 *** real and complex
 interoperability
+** postponed
+*** fixed size matrices (efficiency)
 *** Ince-Gaussian
 *** Fourier-analysis
 *** Wolframite
-** Performance comparison
+*** Performance comparison
 (at least one of)
-*** Python
-*** Wolframite
-** clay doc
-** clean nses
+**** Python
+**** Wolframite
 
-** postponed
+*** clay doc
 *** initial performance tests 
 **** TODO fastmath (non complex)
 vs Python
@@ -150,50 +99,10 @@ main considerations: ejml vs ojalgo
 **** TODO ojalgo?
 
 
-* Comments on current API
-** api version
-version the api?
-** subtype/class should be preceeded by '--'?
-e.g.
-** separate creation functions?
-e.g. diag and diagonal 
-one is information retrieval; other is creation
-names very similar 
-
-Maybe have (m/diag A) and
-
-(m.create/diag [...])
-(m.new/diag [...])
-(mc/diag [...])
-** functions shouldn't have trailing 'm' for matrix everywhere
-(m/mul ...) is cleaner than (m/mulm)
-namespaces are good!
-** Use mathematical notation?
-This is cleaner and more universal, e.g. (m/*v) instead of (m/mulv)
-
-Could use this as a general branching point? Multimethod or protocol etc. As opposed to the other methods. 
-** eye ...
-This feels like a Python holdover that is not very clear.  Identity or 'I' would probably be better. I do have a sense of humour, honest!
-** vtmul
-Argument order is strange?
-** Can't use 'vectors' as 'vector'!
-Clojure vectors ([...]) can't be used with mulv.
-** Should vector and matrix be inside the same namespace?
-e.g. maybe a 'linear algebra' namespace
-** m/zero
-argument order is strange. Need to specify if it is real before rectangular.
-** vec->...
-could cut the vec?
-i.e. (v/->RealVector)
-* Parallel options available
-ejml methods
-ojalg?
+* Previous/current API
+** implementation
+Fastmath uses a mixture of apache and hard-coded clojure?
 * API ideas
-Maybe we don't need the object/structure branch for the implementations?
-
-There is no 'implementation' of a field that is not an object..?
-
-ns branches should only be made at mutually exclusive properties
 ** matrix
 *** separation of concerns
 protocol.matrix
@@ -222,16 +131,45 @@ protocol.matrix
         complex
         rational
         integer
-*** Representation
+* Future
+** Parallel options available
+ejml methods
+ojalg?
+** Docs
+*** implementation choices 
 Row, column order should probably be specified somewhere.
-
+*** naming conventions
 General pattern should be made explicit, i.e.
-
 general-specialised-maths-representation-implementation...
 
-* Notes
-Fastmath uses a mixture of apache and hard-coded clojure?
-** Resources
+**** Should 'm' be replaced with 'M' as the standard placeholder?
+
+*** API
+**** should we branch on 'complex' right at the start?
+i.e. ...matrix.dense.complex.ejml
+or ...complex.matrix.dense.ejml
+**** Should the impementation be high or low in the API?
+i.e. matrix.complex.ejml.dense or complex.matrix.dense.ejml
+
+thinking at the bottom so that the API is conceptual. 
+
+** implementation on Neanderthal?
+** implicit matrix/vector construction
+e.g. (* [1 2 3] [4 5 6]) becomes matrixy 
+
+** FAQ
+*** state of core.matrix?
+dead!
+
+*** Where can we store the type?
+
+*** How are complex numbers implemented?
+(currently two ways)
+Needs to play nicely with `Complex_F64` for `EJML`
+
+would be nice not to have to do this
+
+* Resources
 - Java Matrix Benchmark (https://github.com/lessthanoptimal/Java-Matrix-Benchmark)
 - netlib (for BLAS operations) (https://github.com/luhenry/netlib)
 - hipparchus is the replacement for apache commons math? (https://github.com/Hipparchus-Math/hipparchus)
@@ -240,12 +178,39 @@ Fastmath uses a mixture of apache and hard-coded clojure?
   Confusing complex number support. Probably doesn't do matrix multiplication. 
   -    This was wrong. Does do complex matrices, but found a bug.
   - might be a good default for real operations?
-* Report ideas
-- Full implementation of the fastmath *protocol* API... (in features)
-- but split
-- list of new protocols (with explanation)
-- naming conventions (element more conventional)
-- ability to refer to constructors without the implementation
-- ...dense to fastmath object
-- experiment in the suitability of Clojure for general mathematics 
 
+** libraries available
+https://github.com/lsolbach/qclojure/blob/math-refactoring/src/org/soulspace/qclojure/domain/math/clojure_math.clj
+
+https://github.com/lessthanoptimal/ejml
+
+https://github.com/jblas-project/jblas
+- considered but weird dependencies
+
+apache commons field matrix?
+and complex (field?) vectors
+
+compare and make a decision
+
+*** Transform support
+- fft4j
+* Unused
+** naming conventions
+This is cleaner and more universal, e.g. (m/*v) instead of (m/mulv)
+** api
+*** vtmul
+Argument order is strange?
+
+*** separate creation functions?
+e.g. diag and diagonal 
+one is information retrieval; other is creation
+names very similar 
+
+Maybe have (m/diag A) and
+
+(m.create/diag [...])
+(m.new/diag [...])
+(mc/diag [...])
+
+*** Can't use 'vectors' as 'vector'!
+Clojure vectors ([...]) can't be used with mulv.
