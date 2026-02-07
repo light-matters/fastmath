@@ -1,0 +1,58 @@
+#+title: Clojurists Together - Second Report
+
+* Overview
+In the second period of this project, I refined and finalised the overall protocol structure for mathematical, representational and predicate operations, particularly confirming the split between what is 'necessary' and what is 'extra' when identifying and manipulating mathematical objects. Using this, I created several more protocols and  implemented more rigorous testing namespaces - involving multiple tiers - and leaning on another Clojurists Together project for generating references: Wolframite. By introducing flexible constructor namespaces for both (real and complex) matrices and numbers, as well as multimethod-based type definitions, I solidified the overall design into a generalised API. Such an API now facilitates different layers of use: allowing for operator overloading, domain promotion and variadic arguments across objects as standard, but leaving the concrete implementations separate and available for when speed really matters.
+
+Overall then, this work completes the funding period, successfully implementing the fastmath matrix protocol for complex matrices and extending this to a generalised API. There is however, still much to do, some of which really has to be done soon for these extensions to be practically useful. Below, I expand on what was done during this period and the overall design, povide some illustrative examples of the API  and reflect on the overall status and necessary and hopeful next steps. 
+
+
+
+* Term log
+** Generalised the API
+** complex matrix implementation
+*** outer products
+** general matrix constructors
+
+<-rows extended
+** tiered Testing
+    started using Woframite for tests
+
+** More abstracted protocols  
+non-mathematical
+push towards general ecosystem
+* Design
+a decomplected and flexible API structure
+- problem of hierarcy
+- benefit of non-hierarchical protocols
+
+naming conventions
+
+mathematical and physical needs, but not at the expense...
+
+'vectors' maintain orientation
+
+cyclical dependency regarding constructors, implementations and protocols
+
+complex matrix implementation requires real matrix implementation
+* Constructors
+* Outlook
+At the end of the first period, it had become clear that 
+
+- optimization
+- performance metrics
+- integration
+  - main fastmath branch
+  - wolframite
+  - emmy
+* TODO
+** Before submission 
+*** decomposition
+** Stretch
+*** Fourier
+JTransforms
+*** derived types
+(including square etc.)
+
+* TODO questions
+** can types reuse implementations
+

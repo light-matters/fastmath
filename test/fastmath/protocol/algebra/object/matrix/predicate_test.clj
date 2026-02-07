@@ -7,4 +7,4 @@
 (deftest square
   (are [e a] (= e a)
 
-    (sut/square)))
+    (sut/square?)))
