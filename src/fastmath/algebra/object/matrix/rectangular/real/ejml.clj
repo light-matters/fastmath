@@ -189,8 +189,8 @@
       (CommonOps_DDRM/transpose M T)
       (RealDense. T)))
 
-  (square? [_]
-    (= (.numRows M) (.numCols M)))
+  ;; (square? [_]
+  ;;   (= (.numRows M) (.numCols M)))
 
 ;; ==================================================
   d2/D2

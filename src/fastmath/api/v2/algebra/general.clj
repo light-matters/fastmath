@@ -41,23 +41,23 @@
   (fn [a b]
     [(type/? a) (type/? b)]))
 
-(defmethod add* [::matrix ::matrix] [m1 m2]
+(defmethod add* [::type/matrix ::type/matrix] [m1 m2]
   (when (not (pred/same-shape? m1 m2))
     (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
   (apply cmat/add (plumb/ensure-domain-match m1 m2)))
 
-(defmethod add* [::matrix ::scalar] [a s]
+(defmethod add* [::type/matrix ::type/scalar] [a s]
   (apply emat/add--s (plumb/ensure-domain-match a s)))
-(defmethod add* [::scalar ::matrix] [s a]
+(defmethod add* [::type/scalar ::type/matrix] [s a]
   (apply emat/add--s (plumb/ensure-domain-match a s)))
 
-(defmethod add* [::scalar--real ::scalar--real] [a b]
+(defmethod add* [::type/scalar--real ::type/scalar--real] [a b]
   (fm/+ a b))
-(defmethod add* [::scalar--complex ::scalar--complex] [a b]
+(defmethod add* [::type/scalar--complex ::type/scalar--complex] [a b]
   (apply C/add (plumb/ensure-domain-match a b)))
-(defmethod add* [::scalar--complex ::scalar--real] [a b]
+(defmethod add* [::type/scalar--complex ::type/scalar--real] [a b]
   (apply C/add (plumb/ensure-domain-match a b)))
-(defmethod add* [::scalar--real ::scalar--complex] [a b]
+(defmethod add* [::type/scalar--real ::type/scalar--complex] [a b]
   (apply C/add (plumb/ensure-domain-match a b)))
 
 (defn +
@@ -80,30 +80,30 @@
     ([a b]
      [(type/? a) (type/? b)])))
 
-(defmethod subtract* [::matrix] [m]
+(defmethod subtract* [::type/matrix] [m]
   (cmat/negate m))
-(defmethod subtract* [::scalar--complex] [s]
+(defmethod subtract* [::type/scalar--complex] [s]
   (cmat/negate s))
-(defmethod subtract* [::scalar--real] [s]
+(defmethod subtract* [::type/scalar--real] [s]
   (fm/- s))
 
-(defmethod subtract* [::matrix ::matrix] [m1 m2]
+(defmethod subtract* [::type/matrix ::type/matrix] [m1 m2]
   (when (not (pred/same-shape? m1 m2))
     (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
   (apply emat/subtract (plumb/ensure-domain-match m1 m2)))
 
-(defmethod subtract* [::matrix ::scalar] [m s]
+(defmethod subtract* [::type/matrix ::type/scalar] [m s]
   (apply emat/add--s (plumb/ensure-domain-match m (subtract* s))))
-(defmethod subtract* [::scalar ::matrix] [s m]
+(defmethod subtract* [::type/scalar ::type/matrix] [s m]
   (apply emat/add--s (plumb/ensure-domain-match (cmat/negate m) s)))
 
-(defmethod subtract* [::scalar--real ::scalar--real] [a b]
+(defmethod subtract* [::type/scalar--real ::type/scalar--real] [a b]
   (fm/- a b))
-(defmethod subtract* [::scalar--complex ::scalar--complex] [a b]
+(defmethod subtract* [::type/scalar--complex ::type/scalar--complex] [a b]
   (apply pf/subtract (plumb/ensure-domain-match a b)))
-(defmethod subtract* [::scalar--complex ::scalar--real] [a b]
+(defmethod subtract* [::type/scalar--complex ::type/scalar--real] [a b]
   (apply pf/subtract (plumb/ensure-domain-match a b)))
-(defmethod subtract* [::scalar--real ::scalar--complex] [a b]
+(defmethod subtract* [::type/scalar--real ::type/scalar--complex] [a b]
   (apply pf/subtract (plumb/ensure-domain-match a b)))
 
 (defn -
@@ -129,23 +129,23 @@
     ([a b]
      [(type/? a) (type/? b)])))
 
-(defmethod multiply* [::matrix ::matrix] [m1 m2]
+(defmethod multiply* [::type/matrix ::type/matrix] [m1 m2]
   (when (not (compatible-shapes? m1 m2))
     (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
   (apply emat/multiply (plumb/ensure-domain-match m1 m2)))
 
-(defmethod multiply* [::matrix ::scalar] [m s]
+(defmethod multiply* [::type/matrix ::type/scalar] [m s]
   (apply rmat/scale (plumb/ensure-domain-match m s)))
-(defmethod multiply* [::scalar ::matrix] [s m]
+(defmethod multiply* [::type/scalar ::type/matrix] [s m]
   (apply rmat/scale (plumb/ensure-domain-match m s)))
 
-(defmethod multiply* [::scalar--real ::scalar--real] [a b]
+(defmethod multiply* [::type/scalar--real ::type/scalar--real] [a b]
   (fm/* a b))
-(defmethod multiply* [::scalar--complex ::scalar--complex] [a b]
+(defmethod multiply* [::type/scalar--complex ::type/scalar--complex] [a b]
   (apply C/multiply (plumb/ensure-domain-match a b)))
-(defmethod multiply* [::scalar--complex ::scalar--real] [a b]
+(defmethod multiply* [::type/scalar--complex ::type/scalar--real] [a b]
   (apply C/multiply (plumb/ensure-domain-match a b)))
-(defmethod multiply* [::scalar--real ::scalar--complex] [a b]
+(defmethod multiply* [::type/scalar--real ::type/scalar--complex] [a b]
   (apply C/multiply (plumb/ensure-domain-match a b)))
 
 (defn *
@@ -154,4 +154,3 @@
   ([x y] (multiply* x y))
   ([x y & more]
    (reduce multiply* (multiply* x y) more)))
-

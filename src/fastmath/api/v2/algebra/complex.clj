@@ -9,7 +9,9 @@
                                         ;             Constructor             ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def i "Creates a complex number aording to supplied arguments: (0,0), (re,0) or (re,im)."
+(def i
+  ;; TODO: Extend this to work for matrix creation as well?
+  "Creates a complex number according to supplied arguments: (0,0), (re,0) or (re,im)."
   cc/i)
 
 (def add pc/add)

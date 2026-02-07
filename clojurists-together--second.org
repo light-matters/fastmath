@@ -1,10 +1,9 @@
 #+title: Clojurists Together - Second Report
 
 * Overview
-In the second term of this project, I refined and finalised the overall protocol structure for mathematical, representational and predicate operations, particularly confirming the split between what is 'necessary' and what is 'extra' when identifying and manipulating mathematical objects. Using this, I created several more protocols and  implemented more rigorous testing namespaces - involving multiple tiers - and leaning on another Clojurists Together project for generating references: Wolframite. By introducing flexible constructor namespaces for both (real and complex) matrices and numbers, as well as multimethod-based type definitions, I solidified the overall design into a generalised API. Such an API now facilitates different layers of use: allowing for operator overloading, domain promotion and variadic arguments across objects as standard, but leaving the concrete implementations separate and available for when speed really matters.
+In the second term of this project, I refined and finalised the overall protocol structure for mathematical, representational and predicate operations, particularly confirming the split between what is 'necessary' and what is 'extra' when identifying and manipulating mathematical objects. Using this, I created several more protocols and  implemented more rigorous testing namespaces - involving multiple tiers - and leaning on another Clojurists Together project for generating references: *Wolframite*. By introducing flexible constructor namespaces for both (real and complex) matrices and numbers, as well as multimethod-based type definitions, I solidified the overall design into a generalised API. Such an API now facilitates different layers of use: allowing for operator overloading, domain promotion and variadic arguments across objects as standard, but leaving the concrete implementations separate and available for when speed really matters.
 
 Overall then, this work completes the funding period, successfully implementing the fastmath matrix protocol for complex matrices and extending this to a generalised API. There is however, still much to do, some of which really has to be done soon for these extensions to be practically useful. Below, I expand on what was done during this period: with a discussion of the overall design, some illustrative examples of the API and a reflection on the overall status and the necessary and hopeful next steps. 
-
 
 * New Design
 Although an enthusiastic consumer of parts of ~fastmath~ previously, it only became apparent to me, in the first part of the project, just how vast the library is. This, combined with the notion that a complex matrix API necessarily requires interaction with complex numbers (and that complex matrix implementation requires a consistent real matrix implementation), naturally led to the need to consider wider interaction problems and so wider design concerns. As highlighted in the midterm report, it became clear that, for the library to continue to expand organically, the implementation details would need to be abstracted, so that we can swap alternative backends in and out more easily in the future. This created contradictions however.
@@ -17,48 +16,91 @@ The 'user friendliness' was then implemented entirely separately using a new, ge
 
 It is perhaps also worth mentioning, in addition to practical things like systematic naming conventions (see forthcoming documentation), that in order to integrate the new features with the existing library, I also started to abstract operations outside of the mathematical and physical needs. Fastmath is primarily used within the SciCloj/Noj ecosystem, and so 'representational' protocols were introduced to model matrix access as a two dimensional computing structure (table), rather than a mathematical object. This helps to push the library towards integration with the wider ecosystem, with a long term goal of tighter consistency with tablecloth, tableplot and adjacent libraries.
 
-
 * New API (and implementations)
-Constructors
-<-rows extended
+As a quick illustration of the APIs, consider the process of creating and working with complex numbers with pure protocols for efficiency. 
+#+begin_src clojure
+(require '[fastmath.api.v2.algebra.complex :as C])
+  (C/i 1.0)
+;; #object[fastmath.algebra.object.number.complex.ejml.ComplexNumber 0x38306cba "1.00000+0.000000i"]
 
-general api
-- restructured object type definition and query
-- domain promotion
-- variadic arguments
-- full 'add' api for linear algebra
-- full 'subtraction' 
-- full 'multiplication' 
+(C/add (C/i 1 2) (C/i 3 4))
+;; #object[fastmath.algebra.object.number.complex.ejml.ComplexNumber 0x7454ba0 "4.00000+6.000000i"]
+(C/negate (C/i 1 2))
+;; #object[fastmath.algebra.object.number.complex.ejml.ComplexNumber 0x27ce1f84 "-1.00000-2.000000i"]
+(C/norm (C/i 1 2))
+;; 2.23606797749979
+#+end_src
+Creating matrices consistently.
+#+begin_src clojure
+  (def m--r (mat/diagonal (repeat 3 5)))
+ ;; #object[fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense 0x4a419cba nil]
+;; :shape [3 3] :type float64
+;; [[5.000 0.000 0.000]
+;;  [0.000 5.000 0.000]
+;;  [0.000 0.000 5.000]]
+(mat/<-real ... )
+;; #object[fastmath.algebra.object.matrix.rectangular.complex.ejml.ComplexDense 0x3913463b nil]
+;; :shape [3 3] :type float64
+;; [[5.000 0.000 0.000]
+;;  [0.000 5.000 0.000]
+;;  [0.000 0.000 5.000]]
+(def m--c (mat/<-coll 3 3 (partition 2 (range 18))))
+;; #object[fastmath.algebra.object.matrix.rectangular.complex.ejml.ComplexDense 0x9a42bb7 nil]
+;; :shape [3 3] :type complex128
+;; [[0.000+1.000000i   2.000+3.000000i   4.000+5.000000i  ]
+;;  [6.000+7.000000i   8.000+9.000000i   10.000+11.000000i]
+;;  [12.000+13.000000i 14.000+15.000000i 16.000+17.000000i]]
+(mat/<-rows [[10.0 1.0  -5.0]
+             [0.0 4.0  2.789]
+             [-5 31 8]])
+;; #object[fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense 0x3c9a1815 nil]
+;; :shape [3 3] :type float64
+;; [[10.000 1.000  -5.000]
+;;  [0.000  4.000  2.789 ]
+;;  [-5.000 31.000 8.000 ]]
+(mat/<-rows [[(i 78 0.0) (i 0.0 77) (i 16.13456 56)]
+             [(i 9134 -341) (i 24 2341) (i 10 -56)]])
+;; #object[fastmath.algebra.object.matrix.rectangular.complex.ejml.ComplexDense 0x113c5d0b nil]
+;; :shape [2 3] :type complex128
+;; [[78.000+0.000000i     0.000+77.000000i     16.135+56.000000i   ]
+;;  [9134.000-341.000000i 24.000+2341.000000i  10.000-56.000000i   ]]
 
-outer products 
+#+end_src
 
-array conversion
+And mixing it altogether with domain promotion, general symbols and variadic arguments. 
+#+begin_src clojure
+(refer-clojure :exclude [+ -])
+(require '[fastmath.api.v2.algebra.general :as alg :refer [+ *]])
 
+(+ 5 (C/i 1 2) (mat/identity 2))
+;; #object[fastmath.algebra.object.matrix.rectangular.complex.ejml.ComplexDense 0x61223e14 nil]
+;; :shape [2 2] :type complex128
+;; [[7.000+2.000000i 6.000+2.000000i]
+;;  [6.000+2.000000i 7.000+2.000000i]]
+
+(+ m--c m--r m--r m--c)
+;; #object[fastmath.algebra.object.matrix.rectangular.complex.ejml.ComplexDense 0x4f72c29b nil]
+;; :shape [3 3] :type complex128
+;; [[10.000+2.000000i  4.000+6.000000i   8.000+10.000000i ]
+;;  [12.000+14.000000i 26.000+18.000000i 20.000+22.000000i]
+;;  [24.000+26.000000i 28.000+30.000000i 42.000+34.000000i]]
+#+end_src
 
 
 * Outlook
-
-experiment in the suitability of Clojure for general mathematics 
-
-As can be seen above, it is now possible to interleave fundamental matrix and numeric operations without overt concern for domain. This is simply scratching the surface of fastmath's potential however. At the end of the first term, it had already become clear that the original scope of the project was too large to be completed within the given timeframe, and so all work had to be done with future extension in mind.  
+As can be seen above, it is now possible to interleave fundamental matrix and numeric operations without overt concern for domain. This is simply scratching the surface of fastmath's potential however. At the end of the first term, it had already become clear that the original scope of the project was too large to be completed within the given timeframe, and so all work had to be done with future extension in mind. 
 
 There are some immediate next steps however, that ideally would already have been completed. These are to coordinate the integration of this branch with generateme, to finalize the optimization and clay documentation and to publicize subsequent performance metrics. I hope to complete these promptly.
 
-Longer
+Medium-term goals would then see expansion of the integration of this extension with other fastmath features. For, as discussed, fastmath is a large library and although the core matrix protocol has been implemented, there are many other functions that apply not just to matrices in particular but which could benefit from a unified numeric tower of mathematical operations. Other features within reach are also the exploitation of [[https://github.com/lessthanoptimal/ejml][EJML]]'s parallelism for longer calculations, as well as an alternative implementaton using [[https://github.com/optimatika/ojAlgo][ojAlgo]].
+
+Following this, I would also like to develop explicit links between fastmath and other libraries. The lowest-hanging fruit would be to officially support fastmath-wolframite interop. Having already used *Wolframite* to provide tests and having already worked on the *Wolframite* library itself, this should be relatively straightforward - and would allow easier delegation from fastmath to *Wolframite* (and return) for currently unimplemented algorithms. Similarly, as part of my long-term goal to integrate various Clojure libraries towards physics research, I would like to make interop with *emmy* a smooth reality. Potentially, even using fastmath as an implementation for backend calculations. Likewise, and more easily than for *emmy*, I would like to see libraries like *qclojure* use fastmath for their quantum implementations.
+
+Overall then, although I would have liked to get further in the time available, I am excited by this experiment in the suitability of Clojure for general mathematics. I hope that the library, even just the algebraic namespace protocols themselves, provide a basis for future work in a wide array of applications and I hope that, having read this little report, you are inspired to try it out in your own work. Please don't hesitate to get in touch if that's the case.
 
 
-
-  - wolframite
-  - emmy
-
-- far future
-  - parallelism
-
-    check todos
-    
-   as will be detailed in the forthcoming documentation. 
-* TODO
-** Before submission 
+* TODO :noexport:
+** Before generateme review 
 *** decomposition
 *** ...dense to fastmath object
 
@@ -67,60 +109,4 @@ Longer
 JTransforms
 *** derived types
 (including square etc.)
-
-* TODO questions
-** can types reuse implementations
-* Unused
-** design
-Although the trajectory was set in the first term however, questions like 'Where should the implementation of complex number be?' were soon followed by 'Should protocols represent interface contracts?'
-
-===
-how much to change of the existing `fastmath` API
-
-obvious places for future specializations or alternative backends
-===
-
-a decomplected and flexible API structure
-- problem of hierarcy
-- benefit of non-hierarchical protocols
-
-
-row/column order vs rectangular vs complex
-
-*** Should protocols represent interface contracts?
-i.e. If you implement this, your operation works for all inputs of your type?
-*** Should `protocol` be a parallel ns branch or in the same folder as the implementations?
-*** Similarly to complex number, where should constants like default tolerance be found?
-interaction with wider library
-*** Do we need a separate matrix and vector namespace?
-*** Where should constructors go for key protocols? 
-ns branches should only be made at mutually exclusive properties
-*** Room for future expansion
-**** Would an implementation based on dtype-next be efficient?
-[[x y] [x y]]
- [x y] [x y]]
-***** I guess all of the operations and decomposition etc. would have to be manually implemented...
-
-
-** naming conventions
-- minimal complectedness
-- general to specific
-- mathematical
-- convention and clarity > speed (perils of shortform)
-  - e.g. element vs entry
-
-functions shouldn't have trailing 'm' for matrix everywhere
-
-(m/mul ...) is cleaner than (m/mulm)
-namespaces are good!
-
-Should complex matrices come under complex or matrix?
-    
-'vectors' maintain orientation
-
-Use mathematical notation
-Could use this as a general branching point? Multimethod or protocol etc. As opposed to the other methods. 
-
-*** eye ...
-This feels like a Python holdover that is not very clear.  Identity or 'I' would probably be better. I do have a sense of humour, honest!
 

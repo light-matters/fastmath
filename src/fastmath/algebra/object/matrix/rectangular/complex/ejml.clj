@@ -290,8 +290,8 @@
   (transpose [_]
     (ComplexDense. (transpose M)))
 
-  (square? [_]
-    (= (.numRows M) (.numCols M)))
+  ;; (square? [_]
+  ;;   (= (.numRows M) (.numCols M)))
 
 ;; ==================================================
   d2/D2

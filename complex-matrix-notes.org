@@ -214,3 +214,58 @@ Maybe have (m/diag A) and
 
 *** Can't use 'vectors' as 'vector'!
 Clojure vectors ([...]) can't be used with mulv.
+
+
+
+** design
+Although the trajectory was set in the first term however, questions like 'Where should the implementation of complex number be?' were soon followed by 'Should protocols represent interface contracts?'
+
+===
+how much to change of the existing `fastmath` API
+
+obvious places for future specializations or alternative backends
+===
+
+a decomplected and flexible API structure
+- problem of hierarcy
+- benefit of non-hierarchical protocols
+
+
+row/column order vs rectangular vs complex
+
+*** Should protocols represent interface contracts?
+i.e. If you implement this, your operation works for all inputs of your type?
+*** Should `protocol` be a parallel ns branch or in the same folder as the implementations?
+*** Similarly to complex number, where should constants like default tolerance be found?
+interaction with wider library
+*** Do we need a separate matrix and vector namespace?
+*** Where should constructors go for key protocols? 
+ns branches should only be made at mutually exclusive properties
+*** Room for future expansion
+**** Would an implementation based on dtype-next be efficient?
+[[x y] [x y]]
+ [x y] [x y]]
+***** I guess all of the operations and decomposition etc. would have to be manually implemented...
+
+
+** naming conventions
+- minimal complectedness
+- general to specific
+- mathematical
+- convention and clarity > speed (perils of shortform)
+  - e.g. element vs entry
+
+functions shouldn't have trailing 'm' for matrix everywhere
+
+(m/mul ...) is cleaner than (m/mulm)
+namespaces are good!
+
+Should complex matrices come under complex or matrix?
+    
+'vectors' maintain orientation
+
+Use mathematical notation
+Could use this as a general branching point? Multimethod or protocol etc. As opposed to the other methods. 
+
+*** eye ...
+This feels like a Python holdover that is not very clear.  Identity or 'I' would probably be better. I do have a sense of humour, honest!
