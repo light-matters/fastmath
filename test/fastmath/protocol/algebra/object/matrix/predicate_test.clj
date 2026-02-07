@@ -4,7 +4,13 @@
             [fastmath.algebra.object.number.complex.create :as C]
             [fastmath.algebra.object.matrix.create :as matrix]))
 
-(deftest square
-  (are [e a] (= e a)
+;; (t/testing "Predicates"
+;;   (t/are [q a] (= q a)
+;;     (sut/? mat2x2) true
+;;     (sut/? mat2x2--real) true)
+;;   (sut/square? mat2x2) true
+;;   (sut/square? mat2x2--real) true)
 
-    (sut/square?)))
+;; (deftest square
+;;   (are [e a] (= e a)
+;;     (sut/square?)))

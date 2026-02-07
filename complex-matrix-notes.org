@@ -269,3 +269,5 @@ Could use this as a general branching point? Multimethod or protocol etc. As opp
 
 *** eye ...
 This feels like a Python holdover that is not very clear.  Identity or 'I' would probably be better. I do have a sense of humour, honest!
+* Questions
+** What is the point of the ComplexDense type if it's tied to the EJML implementation?

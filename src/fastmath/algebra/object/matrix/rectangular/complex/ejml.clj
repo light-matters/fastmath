@@ -9,6 +9,7 @@
    [fastmath.algebra.object.number.complex.ejml :as Craw]
    [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
+   [fastmath.protocol.algebra.object.matrix.square :as p-sqmat]
    [fastmath.protocol.algebra.object.matrix.predicate :as pred]
    [fastmath.protocol.algebra.object.matrix.complex-predicate :as cpred]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
@@ -193,6 +194,12 @@
 ;; ==================================================
   emat/MatrixExtra
 ;; ==================================================
+  (diagonal [_]
+    (let [n (min (.numRows M) (.numCols M))
+          out (ZMatrixRMaj. n 1)]
+      (CommonOps_ZDRM/extractDiag M out)
+      (ComplexDense. out)))
+
   (add--s [_ ^doubles [re im]]
     (let [A (.copy M)
           d (.data A)
@@ -272,6 +279,11 @@
 
   (multiply [_ other]
     (ComplexDense. (multiply--m M (.M ^ComplexDense other))))
+
+  (multiply--s [_ [r i]]
+    (let [A (.copy M)]
+      (CommonOps_ZDRM/scale (double r) (double i) A)
+      (ComplexDense. A)))
   (multiply--e [this other]
     (let [^ZMatrixRMaj B (.M ^ComplexDense other)]
       (ComplexDense. (CommonOps_ZDRM/elementMultiply M B nil nil))))
@@ -290,9 +302,33 @@
   (transpose [_]
     (ComplexDense. (transpose M)))
 
-  ;; (square? [_]
-  ;;   (= (.numRows M) (.numCols M)))
+;; ==================================================
+  p-sqmat/SquareMatrix
+;; ==================================================
+  (determinant [_]
+    (CommonOps_ZDRM/det M))
+  (trace [_]
+    (CommonOps_ZDRM/trace M nil))
 
+;; ==================================================
+  p-sqmat/MatrixSolve
+;; ==================================================
+  (cholesky [_]
+    (let [n (.numRows ^ZMatrixRMaj M)
+          _ (when (not= n (.numCols ^ZMatrixRMaj M))
+              (throw (ex-info "Cholesky requires square matrix" {:shape [n (.numCols M)]})))
+          ^CholeskyDecomposition_F64 chol (DecompositionFactory_ZDRM/chol n true)]
+      (when-not (.decompose chol M)
+        (throw (ex-info "Cholesky failed (matrix not SPD)"
+                        {:shape [n n]})))
+      (let [L (.getT chol (ZMatrixRMaj. n n))]   ; lower if 'true' above
+        {:L (ComplexDense. L) :lower? true :spd? true})))
+
+  (solve [this v]
+    (let [^ZMatrixRMaj B (.M ^ComplexDense v)
+          X (ZMatrixRMaj. (.numRows B) (.numCols B))]
+      (CommonOps_ZDRM/solve M B X)
+      (ComplexDense. X)))
 ;; ==================================================
   d2/D2
 ;; ==================================================
@@ -319,12 +355,6 @@
     (mapv (fn [^long ir]
             (ComplexDense. (extract M [ir (+ ir 1)] [0 (.numCols M)])))
           (range (.numRows M))))
-
-  ;; (diagonal [_]
-  ;;   (let [n (min (.numRows M) (.numCols M))
-  ;;         out (ZMatrixRMaj. n 1)]
-  ;;     (CommonOps_ZDRM/extractDiag M out)
-  ;;     (ComplexDense. out)))
 
   (->array ^doubles [_]
     (.getData M))

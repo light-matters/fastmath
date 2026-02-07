@@ -9,6 +9,8 @@
 ;; - consider splitting into more categories, e.g. contingent, compatible shape, predicates ...
 
 (defprotocol MatrixExtra
+  (diagonal [m])
+
   (add--s [A s])
   (inner [A B])
   (kronecker [A B])
@@ -19,7 +21,7 @@
 
   (subtract [A B])
   ;; NOTE: Available for efficiency reasons.
-  (transpose [A]))
+  (transpose [m]))
 (defn ? [x]
   (and
    (satisfies? rmat/RectangularMatrix x)
