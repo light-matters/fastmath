@@ -9,6 +9,7 @@
    [fastmath.algebra.object.number.complex.ejml :as Craw]
    [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
+   [fastmath.protocol.algebra.object.matrix.solve :as solve]
    [fastmath.protocol.algebra.object.matrix.square :as p-sqmat]
    [fastmath.protocol.algebra.object.matrix.predicate :as pred]
    [fastmath.protocol.algebra.object.matrix.complex-predicate :as cpred]
@@ -23,6 +24,8 @@
    [fastmath.protocol.representation.d2 :as d2])
   (:import
    (java.lang Math)
+   (org.ejml.interfaces.decomposition CholeskyDecomposition_F64)
+   (org.ejml.dense.row.factory DecompositionFactory_ZDRM)
    (org.ejml.simple.ops SimpleOperations_ZDRM)
    (org.ejml.data Complex_F64 ZMatrixRMaj DMatrixRMaj)
    (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM MatrixFeatures_ZDRM)))
@@ -311,7 +314,7 @@
     (CommonOps_ZDRM/trace M nil))
 
 ;; ==================================================
-  p-sqmat/MatrixSolve
+  solve/MatrixSolve
 ;; ==================================================
   (cholesky [_]
     (let [n (.numRows ^ZMatrixRMaj M)
@@ -356,8 +359,34 @@
             (ComplexDense. (extract M [ir (+ ir 1)] [0 (.numCols M)])))
           (range (.numRows M))))
 
-  (->array ^doubles [_]
-    (.getData M))
+  (->arrays ^doubles [_]
+    (let [rows (.numRows M)
+          cols (.numCols M)
+          data (.getData M)
+          out  (make-array Complex_F64 rows cols)]
+      (dotimes [i rows]
+        (dotimes [j cols]
+          (let [idx (+ (* 2 (+ j (* i cols))))]
+            (aset out i j
+                  (Complex_F64.
+                   (aget data idx)
+                   (aget data (inc idx)))))))
+      out))
+
+  (->vectors [_]
+    (let [rows (.numRows M)
+          cols (.numCols M)
+          data (.getData M)]
+      (mapv
+       (fn [i]
+         (mapv
+          (fn [j]
+            (let [idx (+ (* 2 (+ j (* i cols))))]
+              [(aget data idx)
+               (aget data (inc idx))]))
+          (range cols)))
+       (range rows))))
+
 ;; ==================================================
   cc/ComplexCoordinate
 ;; ==================================================

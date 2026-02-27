@@ -3,14 +3,14 @@
   Note: In general, the test expectations were derived from Wolframite. 
   "
   (:require
-
    [clojure.test :refer [are deftest is]]
-   [fastmath.api.v2.algebra.predicate :as pred]
-   [fastmath.algebra.test-object :as t]
-   [fastmath.protocol.algebra.object.matrix.rectangular :as prot-mat]
+   [fastmath.protocol.representation.d2 :as d2]
    [fastmath.algebra.object.matrix.create :as mat]
    [fastmath.algebra.object.number.complex.create :as C]
-   [fastmath.api.v2.algebra.general :as sut]))
+   [fastmath.algebra.test-object :as t]
+   [fastmath.api.v2.algebra.general :as sut]
+   [fastmath.api.v2.algebra.predicate :as pred]
+   [fastmath.protocol.algebra.object.matrix.rectangular :as prot-mat]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;              Constants              ;
@@ -129,8 +129,12 @@
                                         ;            Multiplication           ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (deftest multiply*-matrix-test
-  (is (thrown? clojure.lang.ExceptionInfo
-               (sut/multiply* t/m--c t/m--vc)))
+  ;; (is (thrown? clojure.lang.ExceptionInfo
+  ;;              (sut/multiply* t/m--c t/m--vc)))
+  (are [q a] (= q a)
+    (d2/->vectors (sut/multiply* t/m--c t/m--vc))
+    [[[-1.0 0.0] [-3.0 2.0] [-5.0 4.0] [-3.0 2.0] [-5.0 12.0] [-7.0 22.0] [-5.0 4.0] [-7.0 22.0] [-9.0 40.0]] [[-7.0 6.0] [-9.0 32.0] [-11.0 58.0] [-9.0 8.0] [-11.0 42.0] [-13.0 76.0] [-11.0 10.0] [-13.0 52.0] [-15.0 94.0]] [[-13.0 12.0] [-15.0 62.0] [-17.0 112.0] [-15.0 14.0] [-17.0 72.0] [-19.0 130.0] [-17.0 16.0] [-19.0 82.0] [-21.0 148.0]]])
+
   (are [q a] (= q a)
     (sut/multiply* t/m--c t/m--c) (mat/<-coll 3 3 [-27.0 144.0 -33.0 174.0 -39.0 204.0 -45.0 378.0 -51.0 480.0 -57.0 582.0 -63.0 612.0 -69.0 786.0 -75.0 960.0])
     (sut/multiply* t/m--r t/m--r) (mat/identity 3)

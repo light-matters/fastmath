@@ -1,5 +1,6 @@
 (ns fastmath.protocol.algebra.object.matrix.square
   (:require [fastmath.protocol.algebra.structure.ring :as ring]
+            [fastmath.protocol.representation.d2 :as d2]
             [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]))
 
 (defprotocol SquareMatrix
@@ -17,7 +18,7 @@
 
 (defn ? [x]
   (and
-   (apply = (rmat/shape x))
+   (apply = (d2/shape x))
    (ring/? x)
    (satisfies? rmat/RectangularMatrix x)
-   (satisfies? rmat/SquareMatrix x)))
+   (satisfies? SquareMatrix x)))

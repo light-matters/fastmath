@@ -16,6 +16,7 @@
   (kronecker [A B])
 
   (multiply [A B])
+  (multiply--s [A s])
   (multiply--e [A B])
   (multiply--v [A v])
 

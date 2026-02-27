@@ -20,8 +20,9 @@
 
 ;; Transformation
   ;; Assuming that `clojure.lang.Seqable` is implemented
-  (->array ; "Returns a 2D-array"
+  (->arrays ; "Returns a 2D-array"
     [d2])
+  (->vectors [d2])
   (fmap [d2 f])
   ;; WARNING:
   ;; - the first argument of`map--m` is not the same as `core`. This is due to a limitation of protocols.

@@ -225,7 +225,7 @@
   ;;     (CommonOps_DDRM/extractDiag M out)
   ;;     (RealDense. out)))
 
-  (->array [_]
+  (->arrays [_]
     (let [r (.numRows M) c (.numCols M)
           out (make-array Double/TYPE r c)]
       (dotimes [i r]

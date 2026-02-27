@@ -2,6 +2,7 @@
   "For holding useful entities for comparison."
   (:require
    [fastmath.algebra.object.matrix.create :as mat]
+   [fastmath.protocol.representation.d2 :as d2]
    [clojure.test :as t]))
 
 (def m--c

@@ -117,7 +117,7 @@
                                         ;            Multiplication           ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- compatible-shapes?
+(defn- compatible-shapes--mmultiply?
   "Checks that the given matrices have compatible shapes for 'matrix multiplication'."
   ;; TODO: Make this check early in the variadic version.
   [m1 m2]
@@ -130,10 +130,12 @@
      [(type/? a) (type/? b)])))
 
 (defmethod multiply* [::type/matrix ::type/matrix] [m1 m2]
-  (when (not (compatible-shapes? m1 m2))
-    (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
-  (apply emat/multiply (plumb/ensure-domain-match m1 m2)))
-
+  (if-not (compatible-shapes--mmultiply? m1 m2)
+    (apply emat/kronecker (plumb/ensure-domain-match m1 m2))
+    (apply emat/multiply (plumb/ensure-domain-match m1 m2)))
+  ;; (when (not (compatible-shapes--mmultiply? m1 m2))
+  ;;   (throw (ex-info "Shape mismatch!" {:m1 m1 :m2 m2})))
+  )
 (defmethod multiply* [::type/matrix ::type/scalar] [m s]
   (apply rmat/scale (plumb/ensure-domain-match m s)))
 (defmethod multiply* [::type/scalar ::type/matrix] [s m]
