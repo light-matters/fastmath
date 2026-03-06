@@ -131,6 +131,10 @@ protocol.matrix
         complex
         rational
         integer
+** mathematical protocols
+The general idea is that rather than having a separate `conjugate` protocol for different objects, we use 'proper' mathematical definitions, such that all relevant objects implement that single general protocol: one `conjugate` to rule them all.
+
+The flexibility is then not grounded in one type conception but in the consistency of 'mathematics'.
 * Future
 ** Parallel options available
 ejml methods
