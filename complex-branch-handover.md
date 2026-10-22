@@ -90,6 +90,61 @@ done.
    sequence (`(1.0 2.0 3.0 4.0)`) EJML/ojAlgo's `RealDense` produce -
    flattened for consistency. No complex-number equivalent exists in the
    old implementation, so this backend is real-only.
+8. **Implemented a discrete Fourier transform for complex matrices,
+   EJML-backed**, since neither library has one that actually works for
+   complex input (see the ojAlgo bug below) and this was an explicit goal
+   of the original proposal. Three new pieces:
+   - `fastmath.protocol.analysis.transform.fourier` (`FourierTransform`
+     protocol: `fft`/`ifft`) - lives under `analysis`, not `algebra`,
+     alongside the (previously empty, now less so) anticipated
+     `analysis.decomposition.*` tree: a transform isn't a ring/field/group
+     operation, it's a numerical-analysis operation on matrix-shaped data,
+     same category as a decomposition.
+   - `fastmath.analysis.transform.fourier` - a backend-independent
+     numerical kernel (radix-2 Cooley-Tukey FFT for power-of-2 sizes,
+     O(n^2) direct summation otherwise - same dual-path design as
+     ojAlgo's own `DiscreteFourierTransform`), operating on parallel
+     `re`/`im` double arrays rather than `ComplexNumber` to avoid a
+     per-element allocation.
+   - `fastmath.algebra.object.matrix.rectangular.complex.fourier.ejml` -
+     wires the kernel onto `ComplexDense` via `extend-type` (a *separate*
+     file, not more methods added to the already-large `complex/ejml.clj`
+     - the protocol and the type don't need to know about each other;
+     `ComplexDense`'s backing field is public by default, so this needed
+     no changes to the type's own namespace).
+   Verified against known identities (impulse/DC/round-trip, both a
+   power-of-2 and a non-power-of-2 size) and, specifically, against the
+   *exact* complex-input case that exposed ojAlgo's bug below (a purely
+   imaginary impulse) - this implementation gets it right. Confirmed the
+   radix-2 path is genuinely O(n log n): n=4096 took ~18ms, n=4095 (one
+   less, forced onto the O(n^2) fallback) took ~345ms.
+
+   Since extended to a genuine **2D transform** (`fft2d`/`ifft2d`, added
+   to the same `FourierTransform` protocol): the standard separable
+   row-then-column decomposition, implemented directly on `ComplexDense`'s
+   raw interleaved array for speed (rows are contiguous; columns are
+   strided with stride = `cols`, handled via an explicit extract/transform/
+   write-back loop), reusing the existing 1D `fft`/`ifft` kernel calls for
+   each row and column pass rather than reimplementing the FFT math.
+   `ifft2d`'s normalization falls out for free: each 1D `ifft` pass already
+   normalizes by `1/length`, so row-pass (`1/cols`) then column-pass
+   (`1/rows`) gives exactly the correct 2D `1/(rows*cols)` factor with no
+   extra bookkeeping. Verified via new tests in `fourier/ejml_test.clj`
+   (2D impulse -> all-ones; round-trips for both a power-of-2 and a
+   fully-non-power-of-2 matrix shape) - 6 tests, 21 assertions, 0 failures
+   in that namespace alone.
+
+   Demonstrated end-to-end on a real example: a 2D Gaussian beam profile
+   at its waist (real-valued, flat phase) through `fft2d`, confirming two
+   known physical/numerical facts simultaneously - (1) the transform of a
+   Gaussian is itself Gaussian and narrower (Fourier-optics far-field
+   diffraction pattern), and (2) the DC term (shifted-output peak) exactly
+   equals the input's total intensity, `sum(|input|^2)` (discretized
+   `integral |E|^2 ~ pi*w^2`) - computed 113.098, matched `pi*6^2 =
+   113.097` to 4 significant figures for a 64x64 grid with waist `w=6`.
+   Published as an Artifact (https://claude.ai/artifact/AL6zMriYXFCX4hm3UEqEyi)
+   rather than a repo file - purely a demonstration, not part of the
+   library or its test suite.
 
 ## Bugs found in external libraries (ojAlgo 56.1.0)
 
@@ -118,6 +173,25 @@ done.
   design for workloads that query the same matrix more than once. See
   benchmark design notes below for how this is now measured and reported
   rather than designed away.
+- **`DiscreteFourierTransform.transform(Access1D<?>)` silently discards
+  the imaginary part of complex input.** Relevant to the Fourier-analysis
+  integration item in the original proposal, so checked specifically:
+  ojAlgo *does* have a real FFT/DFT module
+  (`org.ojalgo.data.transform.DiscreteFourierTransform` - radix-2 FFT for
+  power-of-2 sizes, O(n^2) Vandermonde-matrix fallback otherwise, plus
+  `ZTransform`), and it's correct for **real-valued** input (verified:
+  impulse/DC/inverse-round-trip identities, both a power-of-2 and a
+  non-power-of-2 size). But feeding it a genuinely complex `MatrixC128`
+  (non-zero imaginary parts) is wrong: a purely imaginary impulse
+  `[0, i, 0, 0]`, whose correct DFT is `[i, 1, -i, -1]`, comes back as all
+  zeros - it's reading only the real part of the input. EJML has no
+  FFT/DFT/Fourier/signal-processing functionality at all, so this isn't a
+  "which backend" choice. Workaround that doesn't depend on the buggy
+  entry point: `DiscreteFourierTransform.newVandermondeMatrix(n)` gives
+  the DFT matrix itself as an ordinary `MatrixC128` - multiplying it by
+  complex data as plain complex matrix-vector multiplication (already
+  correct and tested via the `ComplexDense` backend) sidesteps the bug
+  entirely, at the cost of the O(n log n) speedup for power-of-2 sizes.
 
 ## Benchmark design notes
 
@@ -220,16 +294,18 @@ done.
 - `e4fc563` - small follow-up fixing this doc's own commit list after the
   above push (meta, but illustrates: update this file *after* pushing,
   not before, or it goes stale immediately).
+- `4107145` "Wire in fastmath's own matrix implementation as a third real
+  backend" - `commons.clj` + its test, the benchmark wiring
+  (`domain-backend-pairs`), and the EJML `->arrays` bulk-copy fix. Local
+  only as of this note - not yet pushed to `origin/complex` (ask before
+  assuming a push is wanted; it wasn't requested alongside this commit).
 
 ## Uncommitted as of this note
 
-- `src/fastmath/algebra/object/matrix/rectangular/real/commons.clj` (new)
-  and `test/.../real/commons_test.clj` (new) - the third backend
-  described above.
-- `src/fastmath/benchmark/matrix_backends.clj` - wired `commons` into the
-  benchmark (`domain-backend-pairs` change).
-- `src/fastmath/algebra/object/matrix/rectangular/real/ejml.clj` - the
-  `->arrays` bulk-copy fix described above.
+- `src/fastmath/protocol/analysis/transform/fourier.clj`,
+  `src/fastmath/analysis/transform/fourier.clj`,
+  `src/fastmath/algebra/object/matrix/rectangular/complex/fourier/ejml.clj`,
+  and their test - the Fourier transform feature described above.
 
 ## Not done / explicitly out of scope so far
 
