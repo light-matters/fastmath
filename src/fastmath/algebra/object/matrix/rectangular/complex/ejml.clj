@@ -6,7 +6,6 @@
    [clojure.string :as str]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
    [fastmath.default :as default]
-   [fastmath.algebra.object.number.complex.ejml :as Craw]
    [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
    [fastmath.protocol.algebra.object.matrix.solve :as solve]
@@ -264,11 +263,10 @@
       (ComplexDense. out)))
 
   (fmap [_ f]
-    ;; TODO: VERY INEFFICIENT!
-    ;; - Prevent function from multiple calls to set
-    ;; - Work on (.data A) directly
-    ;; - check number of arguments and branch?
-    (let [^doubles d (.getData M)
+    ;; Operates on a copy, like every other operation here - `M` itself is
+    ;; never mutated, since it may be shared with other ComplexDense values.
+    (let [^ZMatrixRMaj A (.copy M)
+          ^doubles d (.getData A)
           n (alength d)]
       (loop [i 0]
         (when (< i n)
@@ -278,7 +276,7 @@
             (aset-double d i (double re'))
             (aset-double d (unchecked-inc-int i) (double im'))
             (recur (unchecked-add-int i 2)))))
-      (ComplexDense. M)))
+      (ComplexDense. A)))
 
   (multiply [_ other]
     (ComplexDense. (multiply--m M (.M ^ComplexDense other))))
@@ -287,9 +285,11 @@
     (let [A (.copy M)]
       (CommonOps_ZDRM/scale (double r) (double i) A)
       (ComplexDense. A)))
-  (multiply--e [this other]
-    (let [^ZMatrixRMaj B (.M ^ComplexDense other)]
-      (ComplexDense. (CommonOps_ZDRM/elementMultiply M B nil nil))))
+  (multiply--e [_ other]
+    (let [^ZMatrixRMaj B (.M ^ComplexDense other)
+          out (ZMatrixRMaj. (.numRows M) (.numCols M))]
+      (CommonOps_ZDRM/elementMultiply M B out)
+      (ComplexDense. out)))
   (multiply--v [_ v]
     ;; v is expected to be (n×1) ComplexDense
     (let [^ZMatrixRMaj x (.M ^ComplexDense v)
@@ -309,9 +309,9 @@
   p-sqmat/SquareMatrix
 ;; ==================================================
   (determinant [_]
-    (CommonOps_ZDRM/det M))
+    (->C (CommonOps_ZDRM/det M)))
   (trace [_]
-    (CommonOps_ZDRM/trace M nil))
+    (->C (CommonOps_ZDRM/trace M nil)))
 
 ;; ==================================================
   solve/MatrixSolve
@@ -321,7 +321,9 @@
           _ (when (not= n (.numCols ^ZMatrixRMaj M))
               (throw (ex-info "Cholesky requires square matrix" {:shape [n (.numCols M)]})))
           ^CholeskyDecomposition_F64 chol (DecompositionFactory_ZDRM/chol n true)]
-      (when-not (.decompose chol M)
+      ;; `decompose` may modify its input, so hand it a copy - `M` itself
+      ;; must stay untouched, like every other operation here.
+      (when-not (.decompose chol (.copy M))
         (throw (ex-info "Cholesky failed (matrix not SPD)"
                         {:shape [n n]})))
       (let [L (.getT chol (ZMatrixRMaj. n n))]   ; lower if 'true' above
@@ -342,7 +344,7 @@
 
   ;; -------- Retrieval --------
   (element [_ i j]
-    (Craw/->ComplexNumber (getc M (long i) (long j))))
+    (->C (getc M (long i) (long j))))
 
   (column [_ j]
     (ComplexDense. (extract M [0 (.numRows M)] [j (+ 1 (long j))])))
@@ -407,13 +409,15 @@
 ;; ==================================================
   (square? [_] (= (.numRows M) (.numCols M)))
   (normal? [_] (and (= (.numRows M) (.numCols M))
-                    (= (multiply--m M (conjugate-transpose M))
-                       (multiply--m (conjugate-transpose M) M))))
+                    (MatrixFeatures_ZDRM/isEquals (multiply--m M (conjugate-transpose M))
+                                                   (multiply--m (conjugate-transpose M) M)
+                                                   default/tolerance)))
   (symmetric? [_] (and (= (.numRows M) (.numCols M))
-                       (= M (transpose M))))
+                       (MatrixFeatures_ZDRM/isEquals M (transpose M) default/tolerance)))
   (singular? [_] (and (= (.numRows M) (.numCols M))
-                      (= (.determinantComplex SimpleOperations_ZDRM M) (C/i 0.0))))
-  (unitary? [_] (.isUnitary M default/tolerance))
+                      (< (.getMagnitude (.determinantComplex (SimpleOperations_ZDRM.) M))
+                         ^double default/tolerance)))
+  (unitary? [_] (MatrixFeatures_ZDRM/isUnitary M default/tolerance))
 
 ;; ==================================================
   cpred/ComplexPredicate

@@ -2,18 +2,15 @@
   "
   Presents an API for complex number creation, for the sake of implementation-independent reference. Specifically, putting it here allows a referent to be added to the complex number protocol.
 
-  This implementation currently uses **EJML**, but can/needs to be updated when the implementation changes.
+  This implementation uses a backend-independent pair of doubles; see [[fastmath.algebra.object.number.complex.primitive]].
   "
-  (:require [fastmath.algebra.object.number.complex.ejml :as cn])
-  (:import
-   (org.ejml.data Complex_F64)))
+  (:require [fastmath.algebra.object.number.complex.primitive :as cn]))
 
 (defn create
-  "Creates a complex number, (currently) represented as an ejml `ComplexNumber`.
-  Takes optional real and imaginary parts."
+  "Creates a complex number. Takes optional real and imaginary parts."
 
-  ([^double x ^double y] (cn/->ComplexNumber (Complex_F64. x y)))
-  ([^double x] (cn/->ComplexNumber (Complex_F64. x 0.0)))
+  ([^double x ^double y] (cn/->ComplexNumber x y))
+  ([^double x] (cn/->ComplexNumber x 0.0))
   ([] cn/ZERO))
 
 (defn <-real

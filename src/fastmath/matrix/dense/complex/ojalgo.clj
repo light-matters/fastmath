@@ -16,6 +16,7 @@
    j - column index
   "
   (:import
+   (org.ojalgo.matrix MatrixC128)
    (org.ojalgo.matrix.store GenericStore PhysicalStore)
    (org.ojalgo.scalar ComplexNumber)))
 

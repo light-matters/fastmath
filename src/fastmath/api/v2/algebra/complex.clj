@@ -21,6 +21,11 @@
 (def negate pc/negate)
 (def norm pc/norm)
 
+(def subtract pc/subtract)
+(def divide pc/divide)
+(def square pc/square)
+(def square-root pc/square-root)
+
 (def conjugate pc/conjugate)
 (def re pc/re)
 (def im pc/im)

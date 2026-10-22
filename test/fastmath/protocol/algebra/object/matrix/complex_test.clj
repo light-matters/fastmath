@@ -1,6 +1,7 @@
 (ns fastmath.protocol.algebra.object.matrix.complex-test
   (:require [fastmath.protocol.algebra.object.matrix.complex :as sut]
             [fastmath.algebra.object.matrix.create :as mcreate]
+            [fastmath.api.v2.algebra.predicate :as pred]
             [clojure.test :as t]))
 
 (t/deftest basic
@@ -33,7 +34,11 @@
       (t/are [q a] (= q a)
         (sut/real? mat2x2) false
         (sut/real? mat2x2--real) true
-        (sut/real? (mcreate/<-coll 2 2 [45 34  -45  56])) true
+        ;; `[45 34 -45 56]` flattens to 4 elements for a 2x2 matrix, so `<-coll`
+        ;; builds a RealDense rather than a ComplexDense; RealDense doesn't
+        ;; implement ComplexMatrix, so the raw `real?` protocol method isn't
+        ;; applicable here - use the type-dispatching predicate instead.
+        (pred/real? (mcreate/<-coll 2 2 [45 34  -45  56])) true
         (sut/? (mcreate/<-coll 2 2 [45 34  -45  56])) false
         (sut/? mat2x2) true))))
 

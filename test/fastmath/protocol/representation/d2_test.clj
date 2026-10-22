@@ -46,25 +46,41 @@
 
 (deftest transformation
   (are [e a] (Arrays/deepEquals e a)
-    ;; ->array
+    ;; ->arrays
     (->array2d [[1 0 0] [0 1 0] [0 0 1]])
-    (sut/->array m--r))
+    (sut/->arrays m--r))
   (are [e a] (= e a)
 
-;; map
+    ;; ->vectors
+    [[1.0 0.0 0.0] [0.0 1.0 0.0] [0.0 0.0 1.0]]
+    (sut/->vectors m--r)
+
+    [[[0.0 1.0] [2.0 3.0] [4.0 5.0]]
+     [[6.0 7.0] [8.0 9.0] [10.0 11.0]]
+     [[12.0 13.0] [14.0 15.0] [16.0 17.0]]]
+    (sut/->vectors m--c)
+
+    ;; fmap
+    (mat/<-coll 3 3 [2 1 1 1 2 1 1 1 2])
+    (sut/fmap m--r inc)
+
     (mat/<-coll 3 3
                 (flatten (map (fn [[x y]] [(inc x) y])
                               (partition 2 (range 18)))))
     (sut/fmap m--c (fn [r i] [(inc r) i]))
 
     (mat/<-coll 3 3 (interleave [1 0 0 0 1 0 0 0 1] (repeat 9 -1)))
-    (sut/fmap (mat/<-real m--r) (fn [r i] [r (dec i)]))))
+    (sut/fmap (mat/<-real m--r) (fn [r i] [r (dec i)]))
+
+    ;; fmap must not mutate the original (regression: used to mutate in place)
+    (mat/<-coll 3 3 [1 0 0 0 1 0 0 0 1])
+    m--r))
 
 (comment
 
   (Arrays/deepEquals
    (->array2d [[1 0 0] [0 1 0] [0 0 1]])
-   (sut/->array m--r))
+   (sut/->arrays m--r))
   m--c
   (sut/fmap m--c #(rmat/add % (C/i 100.0))))
 

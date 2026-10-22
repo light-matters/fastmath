@@ -6,6 +6,9 @@
    [fastmath.default :as default]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
+   [fastmath.protocol.algebra.object.matrix.solve :as solve]
+   [fastmath.protocol.algebra.object.matrix.square :as p-sqmat]
+   [fastmath.protocol.algebra.object.matrix.predicate :as pred]
    [fastmath.protocol.algebra.structure.additive.group :as ag]
    [fastmath.protocol.algebra.structure.additive.monoid :as am]
    [fastmath.protocol.algebra.structure.additive.semigroup :as asg]
@@ -14,6 +17,8 @@
    [fastmath.protocol.representation.d2 :as d2])
   (:import
    (java.lang Math)
+   (org.ejml.interfaces.decomposition CholeskyDecomposition_F64)
+   (org.ejml.dense.row.factory DecompositionFactory_DDRM)
    (org.ejml.data DMatrixRMaj)
    (org.ejml.dense.row CommonOps_DDRM MatrixFeatures_DDRM NormOps_DDRM)))
 
@@ -41,6 +46,16 @@
   ;; TODO: efficiency implementaton
   "Reuses the destination memory for multiple access calls."
   [])
+
+(defn- multiply--m [m1 m2]
+  (let [out (DMatrixRMaj. (.numRows m1) (.numCols m2))]
+    (CommonOps_DDRM/mult m1 m2 out)
+    out))
+
+(defn- transpose [m]
+  (let [T (DMatrixRMaj. (.numCols m) (.numRows m))]
+    (CommonOps_DDRM/transpose m T)
+    T))
 
 (defn  format--real ^String [^double x ^long p ^double eps]
   (format (str "%." p "f") (if (< (Math/abs x) eps) 0.0 x)))
@@ -126,6 +141,12 @@
 ;; ==================================================
   emat/MatrixExtra
 ;; ==================================================
+  (diagonal [_]
+    (let [n (min (.numRows M) (.numCols M))
+          out (DMatrixRMaj. n 1)]
+      (CommonOps_DDRM/extractDiag M out)
+      (RealDense. out)))
+
   (add--s [_ s]
     (let [A (.copy M) d (.data A) s (double s)]
       (dotimes [k (alength d)]
@@ -133,8 +154,8 @@
       (RealDense. A)))
 
   (inner [_ other]
-    (let [^doubles da (.copy M)
-          ^doubles db (.M ^RealDense other)
+    (let [^doubles da (.getData M)
+          ^doubles db (.getData ^DMatrixRMaj (.M ^RealDense other))
           n (.getNumElements M)]
       (loop [i 0
              acc 0.0]
@@ -144,30 +165,28 @@
           acc))))
 
   (kronecker [_ other]
-    (let [m (.getNumRows ^DMatrixRMaj M)
-          n (.getNumRows ^DMatrixRMaj (.M ^RealDense other))
-          ^doubles ad (.getData ^DMatrixRMaj M)
-          ^doubles bd (.getData ^DMatrixRMaj (.M ^RealDense other))
-          out (DMatrixRMaj. m n)]
-      (dotimes [i m]
-        (let [ai (aget ad i)]
-          (dotimes [j n]
-            (.set out i j (* ai (aget bd j))))))
+    (let [^DMatrixRMaj B (.M ^RealDense other)
+          a-rows (.getNumRows M)
+          a-cols (.getNumCols M)
+          b-rows (.getNumRows B)
+          b-cols (.getNumCols B)
+          out    (DMatrixRMaj. (* a-rows b-rows) (* a-cols b-cols))]
+      (dotimes [i a-rows]
+        (dotimes [j a-cols]
+          (let [aij (.get M i j)]
+            (dotimes [p b-rows]
+              (dotimes [q b-cols]
+                (.set out (+ (* i b-rows) p) (+ (* j b-cols) q)
+                      (* aij (.get B p q))))))))
       (RealDense. out)))
 
-;; (map [_ f]
-  ;;   ;; TODO: Prevent function from multiple calls to set
-  ;;   ;; - Work on (.data A) directly
-  ;;   (let [^DMatrixRMaj A (.copy M)]
-  ;;     (dotimes [i (.numRows A)]
-  ;;       (dotimes [j (.numCols A)]
-  ;;         (.set A i j (f (.get A i j)))))
-  ;;     (RealDense. A)))
   (multiply [_ other]
     (let [^DMatrixRMaj B (.M ^RealDense other)
           out (DMatrixRMaj. (.numRows M) (.numCols B))]
       (CommonOps_DDRM/mult M B out)
       (RealDense. out)))
+  (multiply--s [this s]
+    (module/scale this s))
   (multiply--e [_ other]
     (let [^DMatrixRMaj B (.M ^RealDense other)
           out (DMatrixRMaj. (.numRows M) (.numCols B))]
@@ -189,8 +208,50 @@
       (CommonOps_DDRM/transpose M T)
       (RealDense. T)))
 
-  ;; (square? [_]
-  ;;   (= (.numRows M) (.numCols M)))
+;; ==================================================
+  p-sqmat/SquareMatrix
+;; ==================================================
+  (determinant [_]
+    (CommonOps_DDRM/det M))
+  (trace [_]
+    (CommonOps_DDRM/trace M))
+
+;; ==================================================
+  solve/MatrixSolve
+;; ==================================================
+  (cholesky [_]
+    (let [n (.numRows ^DMatrixRMaj M)
+          _ (when (not= n (.numCols ^DMatrixRMaj M))
+              (throw (ex-info "Cholesky requires square matrix" {:shape [n (.numCols M)]})))
+          ^CholeskyDecomposition_F64 chol (DecompositionFactory_DDRM/chol n true)]
+      ;; `decompose` may modify its input, so hand it a copy - `M` itself
+      ;; must stay untouched, like every other operation here.
+      (when-not (.decompose chol (.copy M))
+        (throw (ex-info "Cholesky failed (matrix not SPD)"
+                        {:shape [n n]})))
+      (let [L (.getT chol (DMatrixRMaj. n n))]   ; lower if 'true' above
+        {:L (RealDense. L) :lower? true :spd? true})))
+
+  (solve [this v]
+    (let [^DMatrixRMaj B (.M ^RealDense v)
+          X (DMatrixRMaj. (.numRows B) (.numCols B))]
+      (CommonOps_DDRM/solve M B X)
+      (RealDense. X)))
+
+;; ==================================================
+  pred/MatrixPredicate
+;; ==================================================
+  (square? [_] (= (.numRows M) (.numCols M)))
+  (normal? [_] (and (= (.numRows M) (.numCols M))
+                    (MatrixFeatures_DDRM/isEquals (multiply--m M (transpose M))
+                                                   (multiply--m (transpose M) M)
+                                                   default/tolerance)))
+  (symmetric? [_] (and (= (.numRows M) (.numCols M))
+                       (MatrixFeatures_DDRM/isEquals M (transpose M) default/tolerance)))
+  (singular? [_] (and (= (.numRows M) (.numCols M))
+                      (< (Math/abs (CommonOps_DDRM/det M))
+                         ^double default/tolerance)))
+  (unitary? [_] (MatrixFeatures_DDRM/isOrthogonal M default/tolerance))
 
 ;; ==================================================
   d2/D2
@@ -219,12 +280,6 @@
             (RealDense. (extract M [ir (+ ir 1)] [0 (.numCols M)])))
           (range (.numRows M))))
 
-  ;; (diagonal [_]
-  ;;   (let [n (min (.numRows M) (.numCols M))
-  ;;         out (DMatrixRMaj. n 1)]
-  ;;     (CommonOps_DDRM/extractDiag M out)
-  ;;     (RealDense. out)))
-
   (->arrays [_]
     (let [r (.numRows M) c (.numCols M)
           out (make-array Double/TYPE r c)]
@@ -233,6 +288,33 @@
           (aset-double out i j (.get M i j))))
       out))
 
+  (->vectors [_]
+    (let [rows (.numRows M)
+          cols (.numCols M)
+          data (.getData M)]
+      (mapv
+       (fn [i]
+         (mapv
+          (fn [j]
+            (aget data (+ j (* i cols))))
+          (range cols)))
+       (range rows))))
+
+  (fmap [_ f]
+    (let [^DMatrixRMaj A (.copy M)
+          ^doubles d (.getData A)
+          n (alength d)]
+      (dotimes [i n]
+        (aset-double d i (double (f (aget d i)))))
+      (RealDense. A)))
+
+;; ==================================================
+  clojure.lang.Seqable
+;; ==================================================
+  (seq [_] (seq (.getData M)))
+;; ==================================================
+  clojure.lang.Sequential
+;; ==================================================
 ;; ==================================================
   Object
 ;; ==================================================

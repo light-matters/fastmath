@@ -1,3 +1,4 @@
-(ns fastmath.constant)
+(ns fastmath.constant
+  (:require [fastmath.default :as default]))
 
-tolerance
+(def ^double tolerance default/tolerance)

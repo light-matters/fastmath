@@ -1,5 +1,6 @@
 (ns fastmath.protocol.algebra.object.number.complex
   (:require
+   [fastmath.protocol.algebra.function.field :as ff]
    [fastmath.protocol.algebra.structure.coordinate.complex :as cc]
    [fastmath.protocol.algebra.structure.coordinate.polar :as pc]
    [fastmath.protocol.algebra.structure.field :as field]
@@ -25,6 +26,11 @@ Other convenience methods are listed below."
 (def zero field/zero)
 (def negate field/negate)
 (def norm nspace/norm)
+
+(def subtract ff/subtract)
+(def divide ff/divide)
+(def square ff/square)
+(def square-root ff/square-root)
 
 (def conjugate cc/conjugate)
 (def re cc/re)

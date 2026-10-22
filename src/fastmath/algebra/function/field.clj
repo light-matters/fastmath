@@ -1,7 +1,7 @@
 (ns fastmath.algebra.function.field
   (:require
-   [fastmath.protocol.algebra.additive.group :as ag]
-   [fastmath.protocol.algebra.multiplicative.group :as mg]))
+   [fastmath.protocol.algebra.structure.additive.group :as ag]
+   [fastmath.protocol.algebra.structure.multiplicative.group :as mg]))
 
 (defn subtract
   "x - y = x + (-y) or -x."
