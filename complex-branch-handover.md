@@ -164,14 +164,14 @@ backend-selectable is a real open decision, not done.
 
 - `f1db339` "Basic bug fixes and RealDense/ComplexDense parity"
 - `497df6b` "Extract backend-independent matrix ops, add an ojAlgo backend"
+- `7121fc5` "Add EJML vs ojAlgo matrix backend benchmark, fix reflection
+  overhead" - the benchmark namespace, the `measure` bugfix, the
+  type-hint/reflection fixes, and this handover doc itself.
 
 ## Uncommitted as of this note
 
-- `src/fastmath/benchmark/matrix_backends.clj` (new) - the EJML vs ojAlgo
-  comparison described above.
-- `src/fastmath/benchmark/apache_ejml.clj` - the `measure` bugfix.
-- `src/fastmath/algebra/object/matrix/rectangular/{real,complex}/ojalgo.clj`,
-  `.../complex/ejml.clj` - the type-hint/reflection fixes.
+Nothing - working tree is clean relative to `origin/complex` as of
+`7121fc5`.
 
 ## Not done / explicitly out of scope so far
 
