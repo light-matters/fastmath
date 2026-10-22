@@ -54,7 +54,7 @@
   "Reuses the destination memory for multiple access calls."
   [])
 
-(defn- ->C [CF64]
+(defn- ->C [^Complex_F64 CF64]
   (C/i (.getReal CF64) (.getImaginary CF64)))
 
 (defn- getc
@@ -75,12 +75,12 @@
      (.set A i j (.-real cnum) (.-imaginary cnum))
      A)))
 
-(defn- multiply--m [m1 m2]
+(defn- multiply--m [^ZMatrixRMaj m1 ^ZMatrixRMaj m2]
   (let [out (ZMatrixRMaj. (.numRows m1) (.numCols m2))]
     (CommonOps_ZDRM/mult m1 m2 out)
     out))
 
-(defn- transpose [m]
+(defn- transpose [^ZMatrixRMaj m]
   (let [T (ZMatrixRMaj. (.numCols m) (.numRows m))]
     (CommonOps_ZDRM/transpose m T)
     T))
@@ -205,8 +205,8 @@
       (ComplexDense. out)))
 
   (add--s [_ ^doubles [re im]]
-    (let [A (.copy M)
-          d (.data A)
+    (let [^ZMatrixRMaj A (.copy M)
+          ^doubles d (.data A)
           n (alength d)]
       (loop [i 0]
         (when (< i n)
@@ -321,11 +321,11 @@
   (->arrays ^doubles [_]
     (let [rows (.numRows M)
           cols (.numCols M)
-          data (.getData M)
+          ^doubles data (.getData M)
           out  (make-array Complex_F64 rows cols)]
       (dotimes [i rows]
         (dotimes [j cols]
-          (let [idx (+ (* 2 (+ j (* i cols))))]
+          (let [idx (* 2 (+ j (* i cols)))]
             (aset out i j
                   (Complex_F64.
                    (aget data idx)
@@ -335,11 +335,11 @@
   (->vectors [_]
     (let [rows (.numRows M)
           cols (.numCols M)
-          data (.getData M)]
+          ^doubles data (.getData M)]
       (mapv
-       (fn [i]
+       (fn [^long i]
          (mapv
-          (fn [j]
+          (fn [^long j]
             (let [idx (+ (* 2 (+ j (* i cols))))]
               [(aget data idx)
                (aget data (inc idx))]))
@@ -387,7 +387,7 @@
 ;; ==================================================
 
   (equals [_ B]
-    (MatrixFeatures_ZDRM/isEquals M (.-M B) default/tolerance))
+    (MatrixFeatures_ZDRM/isEquals M ^ZMatrixRMaj (.-M ^ComplexDense B) default/tolerance))
 
   (toString [_]
     (print! M)))
@@ -415,8 +415,8 @@
    (->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
 
 (defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
-  (let [A  (.-M  M)
-        Z (ZMatrixRMaj. ^long (.numRows A) ^long (.numCols A))]
+  (let [^DMatrixRMaj A (.-M M)
+        Z (ZMatrixRMaj. (.numRows A) (.numCols A))]
     (CommonOps_ZDRM/convert A Z)
     (->ComplexDense Z)))
 

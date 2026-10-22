@@ -55,11 +55,9 @@
 (defn- ^MatrixC128 ->matrix
   "Wrap nested rows of [re im] pairs as a MatrixC128."
   [rows]
-  (->> rows
-       (map (fn [row] (into-array ComplexNumber (map ->oj row))))
-       into-array
-       Access2D/wrap
-       (.makeWrapper MatrixC128/FACTORY)))
+  (let [^"[[Lorg.ojalgo.scalar.ComplexNumber;" data
+        (into-array (map (fn [row] (into-array ComplexNumber (map ->oj row))) rows))]
+    (.makeWrapper MatrixC128/FACTORY (Access2D/wrap data))))
 
 (declare <-rows)
 
@@ -121,7 +119,7 @@
   rmat/RectangularMatrix
 ;; ==================================================
   asg/AdditiveSemigroup
-  (add [_ other] (ComplexDense. (.add M (.-M ^ComplexDense other))))
+  (add [_ other] (ComplexDense. (.add M ^MatrixC128 (.-M ^ComplexDense other))))
 
   am/AdditiveMonoid
   (zero [_] (ComplexDense. (.make MatrixC128/FACTORY (.countRows M) (.countColumns M))))
@@ -160,19 +158,19 @@
                   (let [^ComplexNumber c (.get M i j)]
                     (f (.getReal c) (.getImaginary c))))))))
 
-  (multiply [_ other] (ComplexDense. (.multiply M (.-M ^ComplexDense other))))
+  (multiply [_ other] (ComplexDense. (.multiply M ^MatrixC128 (.-M ^ComplexDense other))))
   (multiply--s [this z] (module/scale this z))
   (multiply--e [_ other]
     (let [^MatrixC128 B (.-M ^ComplexDense other)
           rows (.countRows M) cols (.countColumns M)]
-      (<-rows (for [i (range rows)]
-                (for [j (range cols)]
+      (<-rows (for [^long i (range rows)]
+                (for [^long j (range cols)]
                   (let [^ComplexNumber a (.get M i j)
                         ^ComplexNumber b (.get B i j)
                         ^ComplexNumber p (.multiply a b)]
                     [(.getReal p) (.getImaginary p)]))))))
-  (multiply--v [_ v] (ComplexDense. (.multiply M (.-M ^ComplexDense v))))
-  (subtract [_ other] (ComplexDense. (.subtract M (.-M ^ComplexDense other))))
+  (multiply--v [_ v] (ComplexDense. (.multiply M ^MatrixC128 (.-M ^ComplexDense v))))
+  (subtract [_ other] (ComplexDense. (.subtract M ^MatrixC128 (.-M ^ComplexDense other))))
   (transpose [_] (ComplexDense. (.transpose M)))
 
 ;; ==================================================
@@ -188,13 +186,13 @@
     (let [n (.countRows M)
           _ (when (not= n (.countColumns M))
               (throw (ex-info "Cholesky requires square matrix" {:shape [n (.countColumns M)]})))
-          chol (.decompose Cholesky/C128 M)]
+          ^Cholesky chol (.decompose Cholesky/C128 M)]
       (when-not (.isSPD chol)
         (throw (ex-info "Cholesky failed (matrix not SPD)" {:shape [n n]})))
       {:L (ComplexDense. (.makeWrapper MatrixC128/FACTORY (.getL chol)))
        :lower? true :spd? true}))
 
-  (solve [_ v] (ComplexDense. (.solve M (.-M ^ComplexDense v))))
+  (solve [_ v] (ComplexDense. (.solve M ^MatrixC128 (.-M ^ComplexDense v))))
 
 ;; ==================================================
   cc/ComplexCoordinate

@@ -29,7 +29,7 @@
             (do (f) (recur (inc it)))
             (let [elapsed (- (System/nanoTime) start)]
               (aset-double arr t (/ (double elapsed) 1.0e9 (max 1 it))))))))
-    (->> arr seq sort (nth (quot trials 2)))))
+    (nth (sort (seq arr)) (quot trials 2))))
 
 ;; ---------- EJML (real, dense) ----------
 (defn ejml-matrix ^DMatrixRMaj [rows cols]

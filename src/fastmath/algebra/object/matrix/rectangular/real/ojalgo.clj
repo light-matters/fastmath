@@ -86,7 +86,7 @@
   rmat/RectangularMatrix
 ;; ==================================================
   asg/AdditiveSemigroup
-  (add [_ other] (RealDense. (.add M (.-M ^RealDense other))))
+  (add [_ other] (RealDense. (.add M ^MatrixR064 (.-M ^RealDense other))))
 
   am/AdditiveMonoid
   (zero [_] (RealDense. (.make MatrixR064/FACTORY (.countRows M) (.countColumns M))))
@@ -105,7 +105,7 @@
 ;; ==================================================
   (diagonal [_]
     (let [n (min (.countRows M) (.countColumns M))]
-      (<-rows (for [i (range n)] [(.doubleValue M i i)]))))
+      (<-rows (for [^long i (range n)] [(.doubleValue M (int i) (int i))]))))
 
   (add--s [_ s] (RealDense. (.add M (double s))))
 
@@ -113,16 +113,16 @@
 
   (kronecker [this other] (<-rows (gmat/kronecker-rows this other)))
 
-  (multiply [_ other] (RealDense. (.multiply M (.-M ^RealDense other))))
+  (multiply [_ other] (RealDense. (.multiply M ^MatrixR064 (.-M ^RealDense other))))
   (multiply--s [this s] (module/scale this s))
   (multiply--e [_ other]
     (let [^MatrixR064 B (.-M ^RealDense other)
           rows (.countRows M) cols (.countColumns M)]
-      (<-rows (for [i (range rows)]
-                (for [j (range cols)]
-                  (* (.doubleValue M i j) (.doubleValue B i j)))))))
-  (multiply--v [_ v] (RealDense. (.multiply M (.-M ^RealDense v))))
-  (subtract [_ other] (RealDense. (.subtract M (.-M ^RealDense other))))
+      (<-rows (for [^long i (range rows)]
+                (for [^long j (range cols)]
+                  (* (.doubleValue M (int i) (int j)) (.doubleValue B (int i) (int j))))))))
+  (multiply--v [_ v] (RealDense. (.multiply M ^MatrixR064 (.-M ^RealDense v))))
+  (subtract [_ other] (RealDense. (.subtract M ^MatrixR064 (.-M ^RealDense other))))
   (transpose [_] (RealDense. (.transpose M)))
 
 ;; ==================================================
@@ -138,13 +138,13 @@
     (let [n (.countRows M)
           _ (when (not= n (.countColumns M))
               (throw (ex-info "Cholesky requires square matrix" {:shape [n (.countColumns M)]})))
-          chol (.decompose Cholesky/R064 M)]
+          ^Cholesky chol (.decompose Cholesky/R064 M)]
       (when-not (.isSPD chol)
         (throw (ex-info "Cholesky failed (matrix not SPD)" {:shape [n n]})))
       {:L (RealDense. (.makeWrapper MatrixR064/FACTORY (.getL chol)))
        :lower? true :spd? true}))
 
-  (solve [_ v] (RealDense. (.solve M (.-M ^RealDense v))))
+  (solve [_ v] (RealDense. (.solve M ^MatrixR064 (.-M ^RealDense v))))
 
 ;; ==================================================
   pred/MatrixPredicate
@@ -158,8 +158,9 @@
     ;; identity, built locally (no cross-namespace dependency needed).
     (and (gmat/square? this)
          (let [n (.countRows M)
-               I (.makeEye MatrixR064/FACTORY n n)]
-           (= (RealDense. (.multiply (.transpose M) M)) (RealDense. I)))))
+               ^MatrixR064 I (.makeEye MatrixR064/FACTORY n n)
+               ^MatrixR064 Mt (.transpose M)]
+           (= (RealDense. (.multiply Mt M)) (RealDense. I)))))
 
 ;; ==================================================
   d2/D2
@@ -170,7 +171,7 @@
   (ncols [_] (.countColumns M))
 
   ;; -------- Retrieval --------
-  (element [_ i j] (.doubleValue M (long i) (long j)))
+  (element [_ i j] (.doubleValue M (int i) (int j)))
 
   (column [_ j] (RealDense. (.column M (long j))))
   (row [_ i] (RealDense. (.row M (long i))))
@@ -182,21 +183,24 @@
           out (make-array Double/TYPE r c)]
       (dotimes [i r]
         (dotimes [j c]
-          (aset-double out i j (.doubleValue M i j))))
+          (aset-double out i j (.doubleValue M (int i) (int j)))))
       out))
 
   (->vectors [_]
     (let [r (.countRows M) c (.countColumns M)]
-      (mapv (fn [i] (mapv (fn [j] (.doubleValue M i j)) (range c))) (range r))))
+      (mapv (fn [^long i] (mapv (fn [^long j] (.doubleValue M (int i) (int j))) (range c))) (range r))))
 
   (fmap [_ f]
     (let [r (.countRows M) c (.countColumns M)]
-      (<-rows (for [i (range r)] (for [j (range c)] (f (.doubleValue M i j)))))))
+      (<-rows (for [^long i (range r)]
+                (for [^long j (range c)] (f (.doubleValue M (int i) (int j))))))))
 
 ;; ==================================================
   clojure.lang.Seqable
 ;; ==================================================
-  (seq [_] (for [i (range (.countRows M)) j (range (.countColumns M))] (.doubleValue M i j)))
+  (seq [_]
+    (let [r (.countRows M) c (.countColumns M)]
+      (for [^long i (range r) ^long j (range c)] (.doubleValue M (int i) (int j)))))
 ;; ==================================================
   clojure.lang.Sequential
 ;; ==================================================
@@ -204,12 +208,14 @@
   Object
 ;; ==================================================
   (equals [_ B]
-    (let [^MatrixR064 Bm (.-M ^RealDense B)]
-      (and (= (.countRows M) (.countRows Bm))
-           (= (.countColumns M) (.countColumns Bm))
-           (every? (fn [[i j]] (< (Math/abs (- (.doubleValue M i j) (.doubleValue Bm i j)))
-                                  ^double default/tolerance))
-                   (for [i (range (.countRows M)) j (range (.countColumns M))] [i j])))))
+    (let [^MatrixR064 Bm (.-M ^RealDense B)
+          rows (.countRows M) cols (.countColumns M)]
+      (and (= rows (.countRows Bm))
+           (= cols (.countColumns Bm))
+           (every? (fn [[^long i ^long j]]
+                     (< (Math/abs (- (.doubleValue M (int i) (int j)) (.doubleValue Bm (int i) (int j))))
+                        ^double default/tolerance))
+                   (for [i (range rows) j (range cols)] [i j])))))
   (toString [_] (print! M)))
 
 ;; -------------------------------------------------------------------
