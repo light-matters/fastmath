@@ -5,6 +5,7 @@
   (:require
    [clojure.string :as str]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as realdense]
+   [fastmath.algebra.function.matrix :as gmat]
    [fastmath.default :as default]
    [fastmath.algebra.object.number.complex.create :as C]
    [fastmath.protocol.algebra.object.matrix.complex :as cmat]
@@ -25,7 +26,6 @@
    (java.lang Math)
    (org.ejml.interfaces.decomposition CholeskyDecomposition_F64)
    (org.ejml.dense.row.factory DecompositionFactory_ZDRM)
-   (org.ejml.simple.ops SimpleOperations_ZDRM)
    (org.ejml.data Complex_F64 ZMatrixRMaj DMatrixRMaj)
    (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM MatrixFeatures_ZDRM)))
 
@@ -89,6 +89,8 @@
   (let [^ZMatrixRMaj out (ZMatrixRMaj. (.numCols m) (.numRows m))]
     (CommonOps_ZDRM/transposeConjugate m out)
     out))
+
+(declare <-rows)
 
 (defn  format--real ^String [^double x ^long p ^double eps]
   (format (str "%." p "f") (if (< (Math/abs x) eps) 0.0 x)))
@@ -213,54 +215,9 @@
           (recur (+ i 2))))
       (ComplexDense. A)))
 
-  (inner [_ other]
-    (let [B (.M ^ComplexDense other)
-          ^doubles da (.getData M)
-          ^doubles db (.getData B)
-          n (alength da)]
-      (when-not (== n (alength db))
-        (throw (ex-info "Shape mismatch for inner product"
-                        {:this-len n :other-len (alength db)})))
-      (loop [i 0
-             rsum 0.0
-             isum 0.0]
-        (if (>= i n)
-          (C/i rsum isum)
-          (let [a-re (aget da i)
-                a-im (aget da (inc i))
-                b-re (aget db i)
-                b-im (aget db (inc i))]
-          ;; conj(a) * b = (a_re - i a_im) * (b_re + i b_im)
-            (recur (+ i 2)
-                   (+ rsum (+ (* a-re b-re) (* a-im b-im)))
-                   (+ isum (- (* a-re b-im) (* a-im b-re)))))))))
+  (inner [this other] (gmat/inner this other))
 
-  (kronecker [_ other]
-    (let [B (.M ^ComplexDense other)
-          a-rows (.getNumRows M)
-          a-cols (.getNumCols M)
-          b-rows (.getNumRows B)
-          b-cols (.getNumCols B)
-          out    (ZMatrixRMaj. (* a-rows b-rows) (* a-cols b-cols))]
-      (dotimes [i a-rows]
-        (dotimes [j a-cols]
-          (let [cnum1 (Complex_F64.)
-                ^org.ejml.data.Complex_F64 aij (.get M i j cnum1)
-                ar (.-real cnum1)
-                ai (.-imaginary cnum1)]
-            (dotimes [p b-rows]
-              (dotimes [q b-cols]
-                (let [cnum2 (Complex_F64.)
-                      ^org.ejml.data.Complex_F64 bij (.get B p q cnum2)
-                      br (.-real cnum2)
-                      bi (.-imaginary cnum2)]
-                ;; (ar + i ai) * (br + i bi)
-                  (.set out
-                        (+ (* i b-rows) p)
-                        (+ (* j b-cols) q)
-                        (- (* ar br) (* ai bi))
-                        (+ (* ar bi) (* ai br)))))))))
-      (ComplexDense. out)))
+  (kronecker [this other] (<-rows (gmat/kronecker-rows this other)))
 
   (fmap [_ f]
     ;; Operates on a copy, like every other operation here - `M` itself is
@@ -407,16 +364,10 @@
 ;; ==================================================
   pred/MatrixPredicate
 ;; ==================================================
-  (square? [_] (= (.numRows M) (.numCols M)))
-  (normal? [_] (and (= (.numRows M) (.numCols M))
-                    (MatrixFeatures_ZDRM/isEquals (multiply--m M (conjugate-transpose M))
-                                                   (multiply--m (conjugate-transpose M) M)
-                                                   default/tolerance)))
-  (symmetric? [_] (and (= (.numRows M) (.numCols M))
-                       (MatrixFeatures_ZDRM/isEquals M (transpose M) default/tolerance)))
-  (singular? [_] (and (= (.numRows M) (.numCols M))
-                      (< (.getMagnitude (.determinantComplex (SimpleOperations_ZDRM.) M))
-                         ^double default/tolerance)))
+  (square? [this] (gmat/square? this))
+  (normal? [this] (gmat/normal? this))
+  (symmetric? [this] (gmat/symmetric? this))
+  (singular? [this] (gmat/singular? this))
   (unitary? [_] (MatrixFeatures_ZDRM/isUnitary M default/tolerance))
 
 ;; ==================================================

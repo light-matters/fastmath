@@ -4,6 +4,7 @@
   (:require
    [clojure.string :as str]
    [fastmath.default :as default]
+   [fastmath.algebra.function.matrix :as gmat]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
    [fastmath.protocol.algebra.object.matrix.solve :as solve]
@@ -47,15 +48,7 @@
   "Reuses the destination memory for multiple access calls."
   [])
 
-(defn- multiply--m [m1 m2]
-  (let [out (DMatrixRMaj. (.numRows m1) (.numCols m2))]
-    (CommonOps_DDRM/mult m1 m2 out)
-    out))
-
-(defn- transpose [m]
-  (let [T (DMatrixRMaj. (.numCols m) (.numRows m))]
-    (CommonOps_DDRM/transpose m T)
-    T))
+(declare <-rows)
 
 (defn  format--real ^String [^double x ^long p ^double eps]
   (format (str "%." p "f") (if (< (Math/abs x) eps) 0.0 x)))
@@ -153,32 +146,9 @@
         (aset-double d k (+ (aget d k) s)))
       (RealDense. A)))
 
-  (inner [_ other]
-    (let [^doubles da (.getData M)
-          ^doubles db (.getData ^DMatrixRMaj (.M ^RealDense other))
-          n (.getNumElements M)]
-      (loop [i 0
-             acc 0.0]
-        (if (< i n)
-          (recur (inc i)
-                 (+ acc (* (aget da i) (aget db i))))
-          acc))))
+  (inner [this other] (gmat/inner this other))
 
-  (kronecker [_ other]
-    (let [^DMatrixRMaj B (.M ^RealDense other)
-          a-rows (.getNumRows M)
-          a-cols (.getNumCols M)
-          b-rows (.getNumRows B)
-          b-cols (.getNumCols B)
-          out    (DMatrixRMaj. (* a-rows b-rows) (* a-cols b-cols))]
-      (dotimes [i a-rows]
-        (dotimes [j a-cols]
-          (let [aij (.get M i j)]
-            (dotimes [p b-rows]
-              (dotimes [q b-cols]
-                (.set out (+ (* i b-rows) p) (+ (* j b-cols) q)
-                      (* aij (.get B p q))))))))
-      (RealDense. out)))
+  (kronecker [this other] (<-rows (gmat/kronecker-rows this other)))
 
   (multiply [_ other]
     (let [^DMatrixRMaj B (.M ^RealDense other)
@@ -241,16 +211,10 @@
 ;; ==================================================
   pred/MatrixPredicate
 ;; ==================================================
-  (square? [_] (= (.numRows M) (.numCols M)))
-  (normal? [_] (and (= (.numRows M) (.numCols M))
-                    (MatrixFeatures_DDRM/isEquals (multiply--m M (transpose M))
-                                                   (multiply--m (transpose M) M)
-                                                   default/tolerance)))
-  (symmetric? [_] (and (= (.numRows M) (.numCols M))
-                       (MatrixFeatures_DDRM/isEquals M (transpose M) default/tolerance)))
-  (singular? [_] (and (= (.numRows M) (.numCols M))
-                      (< (Math/abs (CommonOps_DDRM/det M))
-                         ^double default/tolerance)))
+  (square? [this] (gmat/square? this))
+  (normal? [this] (gmat/normal? this))
+  (symmetric? [this] (gmat/symmetric? this))
+  (singular? [this] (gmat/singular? this))
   (unitary? [_] (MatrixFeatures_DDRM/isOrthogonal M default/tolerance))
 
 ;; ==================================================
