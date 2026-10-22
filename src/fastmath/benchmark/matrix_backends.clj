@@ -1,6 +1,9 @@
 (ns fastmath.benchmark.matrix-backends
-  "Compares the EJML and ojAlgo matrix backends against each other, across
-  the real and complex domains and a range of sizes.
+  "Compares the EJML, ojAlgo, and commons (fastmath's own pre-existing
+  Apache-Commons-Math-backed implementation) matrix backends against each
+  other, across the real and complex domains and a range of sizes.
+  `commons` is real-only - it has no complex-number equivalent to wire in,
+  so it's simply absent from every `:complex` row rather than erroring.
 
   Measures through fastmath's own protocol-level API (`rmat/add`,
   `emat/multiply`, `sq/determinant`, `solve/cholesky`, `solve/solve`, ...)
@@ -22,6 +25,7 @@
    [fastmath.benchmark.apache-ejml :refer [measure gflops gemm-flops lu-flops]]
    [fastmath.algebra.object.matrix.rectangular.real.ejml :as real-ejml]
    [fastmath.algebra.object.matrix.rectangular.real.ojalgo :as real-ojalgo]
+   [fastmath.algebra.object.matrix.rectangular.real.commons :as real-commons]
    [fastmath.algebra.object.matrix.rectangular.complex.ejml :as complex-ejml]
    [fastmath.algebra.object.matrix.rectangular.complex.ojalgo :as complex-ojalgo]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]
@@ -88,6 +92,7 @@
 (def ^:private backend-info
   {[:real :ejml]      {:<-rows real-ejml/<-rows      :rows real-rows    :adjoint emat/transpose}
    [:real :ojalgo]    {:<-rows real-ojalgo/<-rows    :rows real-rows    :adjoint emat/transpose}
+   [:real :commons]   {:<-rows real-commons/<-rows   :rows real-rows    :adjoint emat/transpose}
    [:complex :ejml]   {:<-rows complex-ejml/<-rows   :rows complex-rows :adjoint cmat/adjoint}
    [:complex :ojalgo] {:<-rows complex-ojalgo/<-rows :rows complex-rows :adjoint cmat/adjoint}})
 
@@ -201,7 +206,19 @@
    :solve-repeated      {:f #'bench-solve-repeated      :sizes [8 16 32 64 128]}})
 
 (def domains [:real :complex])
-(def backends [:ejml :ojalgo])
+(def backends [:ejml :ojalgo :commons])
+
+(defn- domain-backend-pairs
+  "(domain, backend) pairs to actually run: the cartesian product of the
+  filters, intersected with what `backend-info` has entries for - so an
+  asymmetric backend like `commons` (real-only) is simply absent from
+  `:complex` rows instead of erroring."
+  [domains-filter backends-filter]
+  (let [domains-filter (set domains-filter)
+        backends-filter (set backends-filter)]
+    (for [[domain backend :as pair] (keys backend-info)
+          :when (and (domains-filter domain) (backends-filter backend))]
+      pair)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                 Reporting                                   ;
@@ -234,8 +251,7 @@
    (doseq [op ops-filter
            :let [{:keys [f sizes]} (ops op)]
            n sizes
-           domain domains-filter
-           backend backends-filter]
+           [domain backend] (domain-backend-pairs domains-filter backends-filter)]
      (try
        (row (merge {:domain domain :op op :backend backend :n n} (f domain backend n)))
        (catch Throwable t

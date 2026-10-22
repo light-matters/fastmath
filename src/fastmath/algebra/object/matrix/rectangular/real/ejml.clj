@@ -245,11 +245,16 @@
           (range (.numRows M))))
 
   (->arrays [_]
+    ;; M's own storage is already a flat row-major double[] - bulk-copy
+    ;; each row with System/arraycopy instead of reading cell-by-cell via
+    ;; `.get`, which is a real difference in practice, not just a
+    ;; micro-optimisation: confirmed while benchmarking against another
+    ;; backend whose `.getData()` already does the equivalent internally.
     (let [r (.numRows M) c (.numCols M)
-          out (make-array Double/TYPE r c)]
+          ^doubles data (.getData M)
+          ^"[[D" out (make-array Double/TYPE r c)]
       (dotimes [i r]
-        (dotimes [j c]
-          (aset-double out i j (.get M i j))))
+        (System/arraycopy data (* i c) (aget out i) 0 c))
       out))
 
   (->vectors [_]
