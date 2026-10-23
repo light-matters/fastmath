@@ -14,7 +14,11 @@
                                org.jfree/jcommon]]
 
                  [org.clojure/data.int-map "1.3.0"]
-                 [org.clojure/math.combinatorics "0.3.0"]]
+                 [org.clojure/math.combinatorics "0.3.0"]
+                 ;; complex/real matrix backends (fastmath.algebra.*)
+                 [org.ejml/ejml-core "0.43"]
+                 [org.ejml/ejml-ddense "0.43"]
+                 [org.ejml/ejml-zdense "0.43"]]
   :pedantic? false
   :resource-path "resources/"
   :java-source-paths ["src" "LBFGSBJava/src"]

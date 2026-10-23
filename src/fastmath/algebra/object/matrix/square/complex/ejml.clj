@@ -9,19 +9,15 @@
 ;; TODO: WIP placeholder for the future squarematrix type. 
 
 (defn complexdense
-
   ;; zero
   ([^long n ^long o]
-   (complexdense/->ComplexDense (ZMatrixRMaj. n o)))
-
-  ;; diagonal
-  ([^doubles data]
-   (-> (CommonOps_ZDRM/diag (double-array data))
-       complexdense/->ComplexDense))
-
-;; elements
-  ([^long n ^long o ^doubles data]
-   (complexdense/->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
+   (complexdense/complexdense n o))
+  ;; diagonal, interleaved
+  ([data]
+   (complexdense/complexdense data))
+  ;; elements, row-major interleaved
+  ([^long n ^long o data]
+   (complexdense/complexdense n o data)))
 
 (defn identity [^long n]
   (complexdense/->ComplexDense (CommonOps_ZDRM/identity n)))
@@ -33,12 +29,7 @@
     (complexdense/->ComplexDense Z)))
 
 (defn <-rows  [rows]
-  (let [nrows (count rows)
-        ncols (count (first rows))
-        data  (double-array (flatten rows))]
-    (println "data: ")
-    (println data)
-    (complexdense/->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
+  (complexdense/<-rows rows))
 
 (defn <-cols  [cols]
   (let [^ZMatrixRMaj A (.M (<-rows cols))

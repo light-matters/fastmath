@@ -146,6 +146,40 @@ done.
    rather than a repo file - purely a demonstration, not part of the
    library or its test suite.
 
+9. **Made the branch usable as a dependency (2026-10-23)**, for
+   light-matters (which now uses EJML only through this branch):
+   - Restored `fastmath.matrix` at its original path (it had been moved to
+     `fastmath.matrix.dense.real.original`, which broke every namespace that
+     still required `fastmath.matrix`: stats, distance, interpolation,
+     regression, quaternion). `real/commons.clj` now requires it under the
+     old name.
+   - `deps.edn` (mirrors project.clj, plus EJML core/ddense/zdense as real
+     dependencies) and `build.clj` with a `:deps/prep-lib` step, so the fork
+     works as a tools.deps git dependency (`clj -X:deps prep` compiles the
+     Java). tools.deps never fetches submodules, so the prep step clones
+     LBFGSBJava (https, the pinned submodule sha) into target/ when the
+     submodule is not checked out. EJML also added to project.clj
+     :dependencies.
+10. **Performance work on `ComplexDense` (EJML backend)**, driven by a 16x16
+    steady-state solver (light-matters' SEIT model). Before -> after, 16x16
+    unless noted, same throttled sandbox:
+    | operation | before | after | change |
+    |---|---|---|---|
+    | `solve` | 3.9 us | 3.2-3.5 us | per-thread cached LU solver (`LinearSolverFactory_ZDRM/lu` per size); singular -> ex-info (via non-finite check, cheaper than `quality()`) |
+    | `kronecker` 4x4 (x) 4x4 | 477 us | 0.9 us | native loop on the interleaved arrays (was generic, element by element) |
+    | `<-rows` | 425 us | 8 us | direct fill, no `flatten`; accepts [re im] pairs, reals, complex numbers |
+    | `->vectors` 16x1 | 4.1 us | ~1.3 us | primitive loop |
+    New: `linear-combination` (sum c_k A_k, one pass; terms dense or
+    `sparse`, which visits only nonzeros), `sparse`, `add-diagonal`,
+    `solve-shifted` ((A + c diag v) X = B in a per-thread scratch matrix),
+    `<-interleaved`/`->interleaved`. Bug fixed: `complexdense` with a
+    `double[]` failed ("Unexpected length", `flatten` drops arrays). Removed
+    debug `println`s from `create/<-rows` and `square/complex/<-rows`.
+    All exposed through **`fastmath.api.v2.algebra.fast`** (previously an
+    empty placeholder): explicit functions, no dispatch. Tests:
+    `test/fastmath/api/v2/algebra/fast_test.clj` (each new op against an
+    independent definition, thread safety, singular input).
+
 ## Bugs found in external libraries (ojAlgo 56.1.0)
 
 - **`BasicMatrix.conjugate()` is actually the Hermitian adjoint** (conjugate
@@ -296,29 +330,20 @@ done.
   not before, or it goes stale immediately).
 - `4107145` "Wire in fastmath's own matrix implementation as a third real
   backend" - `commons.clj` + its test, the benchmark wiring
-  (`domain-backend-pairs`), and the EJML `->arrays` bulk-copy fix. Local
-  only as of this note - not yet pushed to `origin/complex` (ask before
-  assuming a push is wanted; it wasn't requested alongside this commit).
+  (`domain-backend-pairs`), and the EJML `->arrays` bulk-copy fix.
+- `1d3a2a1` - 1D and 2D discrete Fourier transforms for complex matrices.
 
 ## Uncommitted as of this note
 
-- `src/fastmath/protocol/analysis/transform/fourier.clj`,
-  `src/fastmath/analysis/transform/fourier.clj`,
-  `src/fastmath/algebra/object/matrix/rectangular/complex/fourier/ejml.clj`,
-  and their test - the Fourier transform feature described above.
+- Nothing (the Fourier transform work is in `1d3a2a1`; items 9-10 above are
+  in the commit after it).
 
 ## Not done / explicitly out of scope so far
 
 - None of the three real backends wired into `create.clj`'s dispatcher
   (separate decision - see Context above).
-- `test/fastmath/matrix_test.clj` (tests for the old implementation
-  directly, not through the new API) still requires `fastmath.matrix`,
-  which no longer exists under that name - it was renamed to
-  `fastmath.matrix.dense.real.original` before this session (commit
-  `c7b247d` was the last touch on the test file, predating the rename).
-  Fails with `FileNotFoundException`. Pre-existing, unrelated to the work
-  in this doc, left alone - found while confirming the new `commons`
-  backend didn't break the old implementation's own test coverage.
+- (Resolved by item 9: `fastmath.matrix` is back at its original path, so
+  `test/fastmath/matrix_test.clj` loads again.)
 - `LBFGSBJava` git submodule is uninitialized on this machine
   (`git submodule status` shows it unchecked-out) - blocks a full,
   unfiltered `lein test` run with `ClassNotFoundException:

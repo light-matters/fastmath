@@ -25,7 +25,8 @@
   (:import
    (java.lang Math)
    (org.ejml.interfaces.decomposition CholeskyDecomposition_F64)
-   (org.ejml.dense.row.factory DecompositionFactory_ZDRM)
+   (org.ejml.dense.row.factory DecompositionFactory_ZDRM LinearSolverFactory_ZDRM)
+   (org.ejml.interfaces.linsol LinearSolverDense)
    (org.ejml.data Complex_F64 ZMatrixRMaj DMatrixRMaj)
    (org.ejml.dense.row CommonOps_ZDRM NormOps_ZDRM MatrixFeatures_ZDRM)))
 
@@ -91,6 +92,141 @@
     out))
 
 (declare <-rows)
+
+(defn- kron
+  "Kronecker product A (x) B on the interleaved data arrays."
+  ^ZMatrixRMaj [^ZMatrixRMaj a ^ZMatrixRMaj b]
+  (let [ra (.numRows a) ca (.numCols a) rb (.numRows b) cb (.numCols b)
+        cols (* ca cb)
+        out (ZMatrixRMaj. (* ra rb) cols)
+        ^doubles ad (.data a) ^doubles bd (.data b) ^doubles od (.data out)]
+    (dotimes [i ra]
+      (dotimes [j ca]
+        (let [ia (* 2 (+ (* i ca) j))
+              xr (aget ad ia) xi (aget ad (inc ia))]
+          (when-not (and (zero? xr) (zero? xi))
+            (dotimes [k rb]
+              (let [row (+ (* i rb) k)]
+                (dotimes [l cb]
+                  (let [ib (* 2 (+ (* k cb) l))
+                        yr (aget bd ib) yi (aget bd (inc ib))
+                        io (* 2 (+ (* row cols) (+ (* j cb) l)))]
+                    (aset od io (- (* xr yr) (* xi yi)))
+                    (aset od (inc io) (+ (* xr yi) (* xi yr)))))))))))
+    out))
+
+(def ^:private ^ThreadLocal lu-solvers
+  ;; One LU solver per thread and size: EJML solvers keep internal workspace,
+  ;; so they are reused within a thread and never shared between threads.
+  (ThreadLocal/withInitial
+   (reify java.util.function.Supplier
+     (get [_] (java.util.HashMap.)))))
+
+(defn- lu-solver ^LinearSolverDense [^long n]
+  (let [^java.util.HashMap cache (.get lu-solvers)
+        k (Long/valueOf n)]
+    (or (.get cache k)
+        (let [s (LinearSolverFactory_ZDRM/lu (int n))]
+          (.put cache k s)
+          s))))
+
+(defn- zsolve
+  "X with A X = B. Square A: LU with a per-thread reused solver (throws if
+  singular); otherwise EJML's least-squares `CommonOps_ZDRM/solve`."
+  ^ZMatrixRMaj [^ZMatrixRMaj A ^ZMatrixRMaj B]
+  (let [X (ZMatrixRMaj. (.numCols A) (.numCols B))]
+    (if (= (.numRows A) (.numCols A))
+      (let [^LinearSolverDense s (lu-solver (.numRows A))]
+        (when-not (.setA s (if (.modifiesA s) (.copy A) A))
+          (throw (ex-info "singular matrix" {:shape [(.numRows A) (.numCols A)]})))
+        (.solve s (if (.modifiesB s) (.copy B) B) X)
+        ;; setA can succeed on an exactly singular matrix; the solution then
+        ;; contains Inf/NaN (cheaper to detect here than with quality())
+        (let [^doubles xd (.data X) n (alength xd)]
+          (loop [t 0]
+            (when (< t n)
+              (if (Double/isFinite (aget xd t))
+                (recur (inc t))
+                (throw (ex-info "singular matrix" {:shape [(.numRows A) (.numCols A)]})))))))
+      (CommonOps_ZDRM/solve A B X))
+    X))
+
+(def ^:private ^ThreadLocal work-matrices
+  ;; per-thread scratch n x n matrices for `solve-shifted` (never escape)
+  (ThreadLocal/withInitial
+   (reify java.util.function.Supplier
+     (get [_] (java.util.HashMap.)))))
+
+(defn- work-matrix ^ZMatrixRMaj [^long n]
+  (let [^java.util.HashMap cache (.get work-matrices)
+        k (Long/valueOf n)]
+    (or (.get cache k)
+        (let [w (ZMatrixRMaj. (int n) (int n))]
+          (.put cache k w)
+          w))))
+
+(defn- check-finite! [^ZMatrixRMaj X ^ZMatrixRMaj A]
+  (let [^doubles xd (.data X) n (alength xd)]
+    (loop [t 0]
+      (when (< t n)
+        (if (Double/isFinite (aget xd t))
+          (recur (inc t))
+          (throw (ex-info "singular matrix" {:shape [(.numRows A) (.numCols A)]})))))))
+
+(defn- zsolve-shifted
+  "X with (A + c diag(v)) X = B, without allocating the shifted matrix."
+  ^ZMatrixRMaj [^ZMatrixRMaj A c-re c-im ^ZMatrixRMaj V ^ZMatrixRMaj B]
+  (let [cr (double c-re) ci (double c-im)
+        n (.numRows A)
+        _ (when-not (and (= n (.numCols A)) (= n (* (.numRows V) (.numCols V))))
+            (throw (ex-info "solve-shifted needs square A and a length-n vector"
+                            {:A [(.numRows A) (.numCols A)] :v [(.numRows V) (.numCols V)]})))
+        ^ZMatrixRMaj W (work-matrix n)
+        ^doubles wd (.data W) ^doubles vd (.data V)
+        ^LinearSolverDense s (lu-solver n)
+        X (ZMatrixRMaj. n (.numCols B))]
+    (System/arraycopy (.data A) 0 wd 0 (* 2 n n))
+    (dotimes [i n]
+      (let [vr (aget vd (* 2 i)) vi (aget vd (inc (* 2 i)))
+            idx (* 2 (+ (* i n) i))]
+        (aset wd idx (+ (aget wd idx) (- (* cr vr) (* ci vi))))
+        (aset wd (inc idx) (+ (aget wd (inc idx)) (+ (* cr vi) (* ci vr))))))
+    (when-not (.setA s W)          ; W is scratch, so modifiesA does not matter
+      (throw (ex-info "singular matrix" {:shape [n n]})))
+    (.solve s (if (.modifiesB s) (.copy B) B) X)
+    (check-finite! X A)
+    X))
+
+(defn- zvectors
+  "Rows of [re im] pairs."
+  [^ZMatrixRMaj M]
+  (let [rows (.numRows M) cols (.numCols M) ^doubles d (.data M)
+        out (object-array rows)]
+    (dotimes [i rows]
+      (let [row (object-array cols)]
+        (dotimes [j cols]
+          (let [idx (* 2 (+ (* i cols) j))]
+            (aset row j [(aget d idx) (aget d (inc idx))])))
+        (aset out i (clojure.lang.LazilyPersistentVector/createOwning row))))
+    (clojure.lang.LazilyPersistentVector/createOwning out)))
+
+(defn- fill-rows!
+  "Fills Z from rows whose entries are [re im] pairs, real numbers, or
+  objects with re/im (fastmath complex numbers)."
+  ^ZMatrixRMaj [^ZMatrixRMaj Z rows]
+  (let [cols (.numCols Z)]
+    (loop [i 0 rs (seq rows)]
+      (when rs
+        (loop [j 0 es (seq (first rs))]
+          (when es
+            (let [e (first es)]
+              (cond
+                (number? e) (.set Z (int i) (int j) (double e) 0.0)
+                (sequential? e) (.set Z (int i) (int j) (double (nth e 0)) (double (nth e 1)))
+                :else (.set Z (int i) (int j) (double (cc/re e)) (double (cc/im e)))))
+            (recur (inc j) (next es))))
+        (recur (inc i) (next rs))))
+    Z))
 
 (defn  format--real ^String [^double x ^long p ^double eps]
   (format (str "%." p "f") (if (< (Math/abs x) eps) 0.0 x)))
@@ -217,7 +353,7 @@
 
   (inner [this other] (gmat/inner this other))
 
-  (kronecker [this other] (<-rows (gmat/kronecker-rows this other)))
+  (kronecker [_ other] (ComplexDense. (kron M (.M ^ComplexDense other))))
 
   (fmap [_ f]
     ;; Operates on a copy, like every other operation here - `M` itself is
@@ -286,11 +422,8 @@
       (let [L (.getT chol (ZMatrixRMaj. n n))]   ; lower if 'true' above
         {:L (ComplexDense. L) :lower? true :spd? true})))
 
-  (solve [this v]
-    (let [^ZMatrixRMaj B (.M ^ComplexDense v)
-          X (ZMatrixRMaj. (.numRows B) (.numCols B))]
-      (CommonOps_ZDRM/solve M B X)
-      (ComplexDense. X)))
+  (solve [_ v]
+    (ComplexDense. (zsolve M (.M ^ComplexDense v))))
 ;; ==================================================
   d2/D2
 ;; ==================================================
@@ -332,19 +465,7 @@
                    (aget data (inc idx)))))))
       out))
 
-  (->vectors [_]
-    (let [rows (.numRows M)
-          cols (.numCols M)
-          ^doubles data (.getData M)]
-      (mapv
-       (fn [^long i]
-         (mapv
-          (fn [^long j]
-            (let [idx (+ (* 2 (+ j (* i cols))))]
-              [(aget data idx)
-               (aget data (inc idx))]))
-          (range cols)))
-       (range rows))))
+  (->vectors [_] (zvectors M))
 
 ;; ==================================================
   cc/ComplexCoordinate
@@ -397,22 +518,20 @@
 ;; -------------------------------------------------------------------
 
 (defn complexdense
-  ;; I
-  ;; (^ComplexDense [^long n]
-  ;;  (->ComplexDense (CommonOps_ZDRM/identity n)))
-
   ;; zero
   (^ComplexDense [^long n ^long o]
    (->ComplexDense (ZMatrixRMaj. n o)))
 
-  ;; diagonal
-  (^ComplexDense [^doubles data]
-   (-> (CommonOps_ZDRM/diag (double-array (flatten data)))
+  ;; diagonal, from interleaved [re0 im0 re1 im1 ...]
+  (^ComplexDense [data]
+   (-> (CommonOps_ZDRM/diag (if (instance? (Class/forName "[D") data) ^doubles data (double-array (flatten data))))
        ->ComplexDense))
 
-;; elements
-  (^ComplexDense [^long n ^long o ^doubles data]
-   (->ComplexDense (ZMatrixRMaj. n o true (double-array (flatten data))))))
+  ;; elements, row-major interleaved: a double[] (used as is) or any nested collection
+  (^ComplexDense [^long n ^long o data]
+   (->ComplexDense (ZMatrixRMaj. n o true (if (instance? (Class/forName "[D") data)
+                                            ^doubles data
+                                            (double-array (flatten data)))))))
 
 (defn <-real ^ComplexDense [^fastmath.algebra.object.matrix.rectangular.real.ejml.RealDense M]
   (let [^DMatrixRMaj A (.-M M)
@@ -420,12 +539,114 @@
     (CommonOps_ZDRM/convert A Z)
     (->ComplexDense Z)))
 
-(defn <-rows ^ComplexDense [rows]
-  (let [nrows (count rows)
-        ncols (count (first rows))
+(defn <-rows
+  "From rows whose entries are [re im] pairs, real numbers or complex numbers."
+  ^ComplexDense [rows]
+  (->ComplexDense (fill-rows! (ZMatrixRMaj. (count rows) (count (first rows))) rows)))
 
-        data  (double-array (flatten rows))]
-    (->ComplexDense (ZMatrixRMaj. nrows ncols true data))))
+(defn <-interleaved
+  "nrows x ncols matrix from a row-major interleaved double[] (copied)."
+  ^ComplexDense [^long nrows ^long ncols ^doubles data]
+  (->ComplexDense (ZMatrixRMaj. nrows ncols true (aclone data))))
+
+(defn ->interleaved
+  "Copy of the row-major interleaved data."
+  ^doubles [^ComplexDense A]
+  (aclone ^doubles (.data ^ZMatrixRMaj (.M A))))
+
+(defn solve-shifted
+  "X with (A + c diag(v)) X = B for square A, a length-n vector v and a
+  complex coefficient c ([re im] or real). Same as
+  (solve (add-diagonal A c v) B) but works in a per-thread scratch matrix,
+  so repeated shifted solves (resolvents, Doppler classes) allocate only X."
+  ^ComplexDense [^ComplexDense A c ^ComplexDense v ^ComplexDense B]
+  (->ComplexDense (zsolve-shifted (.M A)
+                                  (double (if (number? c) c (nth c 0)))
+                                  (double (if (number? c) 0.0 (nth c 1)))
+                                  (.M v) (.M B))))
+
+(defn add-diagonal
+  "A + c diag(v): a copy of square A with c v_i added to entry (i, i). v is an
+  n x 1 or 1 x n matrix, c a complex coefficient ([re im] or real)."
+  ^ComplexDense [^ComplexDense A c ^ComplexDense v]
+  (let [^ZMatrixRMaj M (.copy ^ZMatrixRMaj (.M A))
+        ^ZMatrixRMaj V (.M v)
+        n (.numRows M)
+        cr (double (if (number? c) c (nth c 0)))
+        ci (double (if (number? c) 0.0 (nth c 1)))
+        ^doubles md (.data M) ^doubles vd (.data V)]
+    (when-not (and (= n (.numCols M)) (= n (* (.numRows V) (.numCols V))))
+      (throw (ex-info "add-diagonal needs square A and a length-n vector"
+                      {:A [(.numRows M) (.numCols M)] :v [(.numRows V) (.numCols V)]})))
+    (dotimes [i n]
+      (let [vr (aget vd (* 2 i)) vi (aget vd (inc (* 2 i)))
+            idx (* 2 (+ (* i n) i))]
+        (aset md idx (+ (aget md idx) (- (* cr vr) (* ci vi))))
+        (aset md (inc idx) (+ (aget md (inc idx)) (+ (* cr vi) (* ci vr))))))
+    (->ComplexDense M)))
+
+(deftype ComplexSparse [^long nrows ^long ncols ^ints idx ^doubles vals]
+  ;; Nonzero entries of a complex matrix: row-major linear indices `idx` and
+  ;; interleaved values `vals`. Immutable; made by `sparse`, consumed by
+  ;; `linear-combination` (which then visits only these entries).
+  Object
+  (toString [_] (format "#ComplexSparse[%d x %d, %d nonzeros]" nrows ncols (alength idx))))
+
+(defn sparse
+  "Sparse copy (nonzero entries only) of a ComplexDense, for use as a term in
+  `linear-combination`."
+  ^ComplexSparse [^ComplexDense A]
+  (let [^ZMatrixRMaj M (.M A)
+        ^doubles d (.data M)
+        n (* (.numRows M) (.numCols M))
+        nz (vec (filter #(not (and (zero? (aget d (* 2 (long %)))) (zero? (aget d (inc (* 2 (long %))))))) (range n)))]
+    (ComplexSparse. (.numRows M) (.numCols M)
+                    (int-array nz)
+                    (double-array (mapcat (fn [k] [(aget d (* 2 (long k))) (aget d (inc (* 2 (long k))))]) nz)))))
+
+(defn- term-rows ^long [t]
+  (if (instance? ComplexSparse t) (.-nrows ^ComplexSparse t) (.numRows ^ZMatrixRMaj (.M ^ComplexDense t))))
+(defn- term-cols ^long [t]
+  (if (instance? ComplexSparse t) (.-ncols ^ComplexSparse t) (.numCols ^ZMatrixRMaj (.M ^ComplexDense t))))
+
+(defn linear-combination
+  "sum_k c_k A_k in one pass, for complex coefficients c_k ([re im] or a
+  real number) and same-shape terms A_k: ComplexDense, or ComplexSparse (from
+  `sparse`), for which only the nonzero entries are visited."
+  ^ComplexDense [coeffs mats]
+  (let [t0 (first mats)
+        r (term-rows t0) c (term-cols t0)
+        out (ZMatrixRMaj. (int r) (int c))
+        ^doubles od (.data out)
+        n (alength od)]
+    (loop [cs (seq coeffs) ms (seq mats)]
+      (when (and cs ms)
+        (let [k (first cs)
+              cr (double (if (number? k) k (nth k 0)))
+              ci (double (if (number? k) 0.0 (nth k 1)))
+              t (first ms)]
+          (when-not (and (== r (term-rows t)) (== c (term-cols t)))
+            (throw (ex-info "shape mismatch" {:expected [r c] :got [(term-rows t) (term-cols t)]})))
+          (if (instance? ComplexSparse t)
+            (let [^ints ix (.-idx ^ComplexSparse t) ^doubles vs (.-vals ^ComplexSparse t)]
+              (dotimes [q (alength ix)]
+                (let [o (* 2 (aget ix q)) a (aget vs (* 2 q)) b (aget vs (inc (* 2 q)))]
+                  (aset od o (+ (aget od o) (- (* cr a) (* ci b))))
+                  (aset od (inc o) (+ (aget od (inc o)) (+ (* cr b) (* ci a)))))))
+            (let [^doubles ad (.data ^ZMatrixRMaj (.M ^ComplexDense t))]
+              (if (zero? ci)
+                (loop [q 0]
+                  (when (< q n)
+                    (aset od q (+ (aget od q) (* cr (aget ad q))))
+                    (recur (inc q))))
+                (loop [q 0]
+                  (when (< q n)
+                    (let [a (aget ad q) b (aget ad (inc q))]
+                      (aset od q (+ (aget od q) (- (* cr a) (* ci b))))
+                      (aset od (inc q) (+ (aget od (inc q)) (+ (* cr b) (* ci a)))))
+                    (recur (+ q 2)))))))
+          (recur (next cs) (next ms)))))
+    (->ComplexDense out)))
 
 (defn <-cols ^ComplexDense [cols]
   (let [ncols (count cols)

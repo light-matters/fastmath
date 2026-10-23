@@ -84,12 +84,10 @@
   (let [shape [(count rows) (count (first rows))]
         domain (if-not (complex-elements? shape rows) :real :complex)]
     (if (= (first shape) (second shape))
-      (do
-        (println domain)
-        (case domain
-          :real    (sqrmat/<-rows rows)
-          :complex (sqcmat/<-rows rows)
-          (throw (ex-info "Unknown domain" {:domain domain}))))
+      (case domain
+        :real    (sqrmat/<-rows rows)
+        :complex (sqcmat/<-rows rows)
+        (throw (ex-info "Unknown domain" {:domain domain})))
       (case domain
         :real    (rmat/<-rows rows)
         :complex (cmat/<-rows rows)

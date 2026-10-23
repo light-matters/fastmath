@@ -1,0 +1,24 @@
+;; tools.deps manifest, so the fork can be used as a git dependency:
+;;
+;;   generateme/fastmath {:git/url "https://github.com/light-matters/fastmath.git"
+;;                        :git/sha "..."}
+;;
+;; then, once per sha, `clj -X:deps prep` compiles the Java sources into
+;; target/classes (see build.clj). Mirrors project.clj's :dependencies, plus
+;; EJML, which the complex-matrix work (fastmath.algebra.*) needs at run time.
+{:paths ["src" "resources" "target/classes"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.0"}
+        net.jafama/jafama {:mvn/version "2.3.2"}
+        org.apache.commons/commons-math3 {:mvn/version "3.6.1"}
+        de.sciss/jwave {:mvn/version "1.0.3"}
+        com.github.wendykierp/JTransforms {:mvn/version "3.1"}
+        ca.umontreal.iro.simul/ssj {:mvn/version "3.3.2"
+                                    :exclusions [org.jfree/jfreechart org.jfree/jcommon]}
+        org.clojure/data.int-map {:mvn/version "1.3.0"}
+        org.clojure/math.combinatorics {:mvn/version "0.3.0"}
+        org.ejml/ejml-core {:mvn/version "0.43"}
+        org.ejml/ejml-ddense {:mvn/version "0.43"}
+        org.ejml/ejml-zdense {:mvn/version "0.43"}}
+ :deps/prep-lib {:alias :build :fn compile-java :ensure "target/classes"}
+ :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}}
+                   :ns-default build}}}

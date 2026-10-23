@@ -1,6 +1,6 @@
 (ns fastmath.algebra.object.matrix.rectangular.real.commons
   "Wires fastmath's own pre-existing real dense matrix implementation
-  (`fastmath.matrix.dense.real.original`, backed by Apache Commons Math's
+  (`fastmath.matrix`, backed by Apache Commons Math's
   `RealMatrix`) into the new protocol-based API as a third backend,
   alongside EJML and ojAlgo - same protocol surface, same method shapes,
   just delegating to the already-existing `old/*` functions instead of
@@ -8,7 +8,7 @@
   "
   (:require
    [fastmath.algebra.function.matrix :as gmat]
-   [fastmath.matrix.dense.real.original :as old]
+   [fastmath.matrix :as old]
    [fastmath.default :as default]
    [fastmath.protocol.algebra.object.matrix.extra :as emat]
    [fastmath.protocol.algebra.object.matrix.rectangular :as rmat]

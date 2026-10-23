@@ -16,3 +16,4 @@ fastmath.core.matrix/target/
 .calva
 .clerk
 *~
+.cpcache/
